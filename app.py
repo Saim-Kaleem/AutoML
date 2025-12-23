@@ -23,6 +23,205 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Custom CSS for enhanced UI
+st.markdown("""
+<style>
+    /* Main theme colors */
+    :root {
+        --primary-color: #f59e0b;
+        --secondary-color: #1f2937;
+        --success-color: #10b981;
+        --error-color: #ef4444;
+    }
+    
+    /* Hide Streamlit branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    
+    /* Main container styling */
+    .main {
+        background: #ffffff;
+    }
+    
+    /* Title styling */
+    .main-title {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #f59e0b;
+        text-align: center;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .subtitle {
+        text-align: center;
+        color: #f59e0b;
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* Card styling */
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin: 1rem 0;
+        border-left: 4px solid #f59e0b;
+        transition: transform 0.2s;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Metric cards */
+    .metric-card {
+        background: #f59e0b;
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+        color: white;
+    }
+    
+    .metric-label {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: white;
+    }
+    
+    /* Section headers */
+    .section-header {
+        background: #1f2937;
+        color: #f59e0b;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        margin: 1.5rem 0 1rem 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Success box */
+    .success-box {
+        background: #10b981;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        font-weight: 500;
+    }
+    
+    /* Error box */
+    .error-box {
+        background: #ef4444;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        font-weight: 500;
+    }
+    
+    /* Warning box */
+    .warning-box {
+        background: #f59e0b;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        font-weight: 500;
+    }
+    
+    /* Info box */
+    .info-box {
+        background: #1f2937;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        margin: 1rem 0;
+        font-weight: 500;
+    }
+    
+    /* Sidebar styling */
+    [data-testid="stSidebar"] {
+        background: #1f2937;
+    }
+    
+    [data-testid="stSidebar"] .element-container {
+        color: white;
+    }
+    
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span {
+        color: white !important;
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s;
+        background-color: #f59e0b;
+        color: white;
+        border: none;
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        background-color: #d97706;
+    }
+    
+    /* Dataframe styling */
+    .dataframe {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    /* Progress bar */
+    .stProgress > div > div > div > div {
+        background: #f59e0b;
+    }
+    
+    /* Step badge */
+    .step-badge {
+        display: inline-block;
+        background: #f59e0b;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    /* Text colors */
+    h1, h2, h3, h4, h5, h6 {
+        color: white;
+    }
+    
+    h2, h3 {
+        color: #f59e0b;
+    }
+    
+    p, span, div {
+        color: white;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # Initialize session state
 if 'step' not in st.session_state:
     st.session_state.step = 1
@@ -45,9 +244,9 @@ if 'optimization_results' not in st.session_state:
 
 
 def main():
-    # Title and description
-    st.title("🤖 AutoML Classification System")
-    st.markdown("**End-to-end automated machine learning for classification tasks**")
+    # Title and description with custom styling
+    st.markdown('<h1 class="main-title">🤖 AutoML Classification System</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">✨ End-to-end automated machine learning for classification tasks ✨</p>', unsafe_allow_html=True)
     st.markdown("---")
     
     # Sidebar navigation
@@ -118,9 +317,9 @@ def main():
 
 def step_upload_dataset():
     """Step 1: Upload and validate dataset."""
-    st.header("1️⃣ Upload Dataset")
+    st.markdown('<div class="section-header">1️⃣ Upload Dataset</div>', unsafe_allow_html=True)
     
-    st.info("📁 Upload a CSV file (max 100 MB). The dataset must have at least 2 columns and 10 rows.")
+    st.markdown('<div class="info-box">📁 Upload a CSV file (max 100 MB). The dataset must have at least 2 columns and 10 rows.</div>', unsafe_allow_html=True)
     
     uploaded_file = st.file_uploader("Choose a CSV file", type=['csv'], key='file_uploader')
     
@@ -136,19 +335,39 @@ def step_upload_dataset():
                 st.error(f"❌ Invalid dataset: {error_msg}")
                 return
             
-            st.success("✅ Dataset uploaded successfully!")
+            st.markdown('<div class="success-box">✅ Dataset uploaded successfully!</div>', unsafe_allow_html=True)
             
-            # Display basic info
+            # Display basic info with custom metric cards
+            basic_stats = utils.get_basic_stats(df)
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("Rows", len(df))
+                st.markdown(f'''
+                <div class="metric-card">
+                    <div class="metric-label">Rows</div>
+                    <div class="metric-value">{len(df)}</div>
+                </div>
+                ''', unsafe_allow_html=True)
             with col2:
-                st.metric("Columns", len(df.columns))
+                st.markdown(f'''
+                <div class="metric-card">
+                    <div class="metric-label">Columns</div>
+                    <div class="metric-value">{len(df.columns)}</div>
+                </div>
+                ''', unsafe_allow_html=True)
             with col3:
-                basic_stats = utils.get_basic_stats(df)
-                st.metric("Numeric Features", basic_stats['n_numeric'])
+                st.markdown(f'''
+                <div class="metric-card">
+                    <div class="metric-label">Numeric</div>
+                    <div class="metric-value">{basic_stats['n_numeric']}</div>
+                </div>
+                ''', unsafe_allow_html=True)
             with col4:
-                st.metric("Categorical Features", basic_stats['n_categorical'])
+                st.markdown(f'''
+                <div class="metric-card">
+                    <div class="metric-label">Categorical</div>
+                    <div class="metric-value">{basic_stats['n_categorical']}</div>
+                </div>
+                ''', unsafe_allow_html=True)
             
             # Show preview
             st.subheader("Dataset Preview")
@@ -177,7 +396,7 @@ def step_upload_dataset():
 
 def step_exploratory_analysis():
     """Step 2: Exploratory Data Analysis."""
-    st.header("2️⃣ Exploratory Data Analysis")
+    st.markdown('<div class="section-header">2️⃣ Exploratory Data Analysis</div>', unsafe_allow_html=True)
     
     df = st.session_state.df
     feature_types = utils.get_feature_types(df)
@@ -254,7 +473,7 @@ def step_exploratory_analysis():
 
 def step_issue_detection():
     """Step 3: Detect data quality issues."""
-    st.header("3️⃣ Issue Detection")
+    st.markdown('<div class="section-header">3️⃣ Issue Detection</div>', unsafe_allow_html=True)
     
     df = st.session_state.df
     feature_types = utils.get_feature_types(df)
@@ -328,11 +547,11 @@ def step_issue_detection():
 
 def step_select_target():
     """Step 4: Select target variable."""
-    st.header("4️⃣ Select Target Variable")
+    st.markdown('<div class="section-header">4️⃣ Select Target Variable</div>', unsafe_allow_html=True)
     
     df = st.session_state.df
     
-    st.info("📌 Select the column you want to predict (target variable)")
+    st.markdown('<div class="info-box">📌 Select the column you want to predict (target variable)</div>', unsafe_allow_html=True)
     
     target_col = st.selectbox(
         "Target Variable",
@@ -361,9 +580,9 @@ def step_select_target():
             st.metric("Minority Class %", f"{class_imbalance['minority_percentage']:.2f}%")
         
         if class_imbalance['is_imbalanced']:
-            st.warning(f"⚠️ Class imbalance detected! Imbalance ratio: {class_imbalance['imbalance_ratio']:.2f}")
+            st.markdown(f'<div class="warning-box">⚠️ Class imbalance detected! Imbalance ratio: {class_imbalance["imbalance_ratio"]:.2f}</div>', unsafe_allow_html=True)
         else:
-            st.success("✅ Classes are relatively balanced")
+            st.markdown('<div class="success-box">✅ Classes are relatively balanced</div>', unsafe_allow_html=True)
         
         # Store in diagnostics
         if st.session_state.diagnostics:
@@ -388,13 +607,13 @@ def step_select_target():
 
 def step_configure_preprocessing():
     """Step 5: Configure preprocessing options."""
-    st.header("5️⃣ Configure Preprocessing")
+    st.markdown('<div class="section-header">5️⃣ Configure Preprocessing</div>', unsafe_allow_html=True)
     
     df = st.session_state.df
     diagnostics = st.session_state.diagnostics
     target_col = st.session_state.target_col
     
-    st.info("⚙️ Configure how to handle data issues. All transformations will be fit on training data only.")
+    st.markdown('<div class="info-box">⚙️ Configure how to handle data issues. All transformations will be fit on training data only.</div>', unsafe_allow_html=True)
     
     config = {}
     
@@ -517,7 +736,7 @@ def run_preprocessing(_df, target_col, config):
 
 def step_train_models():
     """Step 6: Train all models."""
-    st.header("6️⃣ Train Models")
+    st.markdown('<div class="section-header">6️⃣ Train Models</div>', unsafe_allow_html=True)
     
     df = st.session_state.df
     target_col = st.session_state.target_col
@@ -592,9 +811,9 @@ def step_train_models():
 
 def step_optimize_models():
     """Step 7: Hyperparameter optimization."""
-    st.header("7️⃣ Hyperparameter Optimization")
+    st.markdown('<div class="section-header">7️⃣ Hyperparameter Optimization</div>', unsafe_allow_html=True)
     
-    st.info("🔧 Optimize model hyperparameters using cross-validation")
+    st.markdown('<div class="info-box">🔧 Optimize model hyperparameters using cross-validation</div>', unsafe_allow_html=True)
     
     # Optimization settings
     col1, col2, col3 = st.columns(3)
@@ -675,7 +894,7 @@ def step_optimize_models():
 
 def step_evaluate_models():
     """Step 8: Comprehensive evaluation and comparison."""
-    st.header("8️⃣ Model Evaluation & Comparison")
+    st.markdown('<div class="section-header">8️⃣ Model Evaluation & Comparison</div>', unsafe_allow_html=True)
     
     eval_results = st.session_state.evaluation_results
     processed_data = st.session_state.processed_data
@@ -760,9 +979,9 @@ def step_evaluate_models():
 
 def step_generate_report():
     """Step 9: Generate and download comprehensive report."""
-    st.header("9️⃣ Generate Report")
+    st.markdown('<div class="section-header">9️⃣ Generate Report</div>', unsafe_allow_html=True)
     
-    st.info("📄 Generate a comprehensive report with all findings")
+    st.markdown('<div class="info-box">📄 Generate a comprehensive report with all findings</div>', unsafe_allow_html=True)
     
     # Collect all data
     dataset_info = utils.get_basic_stats(st.session_state.df)
@@ -835,10 +1054,10 @@ def step_generate_report():
         except Exception as e:
             st.warning(f"PDF generation unavailable: {str(e)}")
     
-    # Final message
+    # Final message with enhanced styling
     st.markdown("---")
-    st.success("🎉 **AutoML workflow completed successfully!**")
-    st.info("You can now reset the application to analyze another dataset.")
+    st.markdown('<div class="success-box" style="text-align: center; font-size: 1.2rem;">🎉 AutoML workflow completed successfully! 🎉</div>', unsafe_allow_html=True)
+    st.markdown('<div class="info-box" style="text-align: center;">You can now reset the application to analyze another dataset.</div>', unsafe_allow_html=True)
     
     if st.button("⬅️ Back"):
         st.session_state.step = 8
