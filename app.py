@@ -383,6 +383,55 @@ def step_upload_dataset():
             })
             st.dataframe(dtypes_df, use_container_width=True)
             
+            # Data type conversion option
+            st.subheader("🔄 Convert Data Types (Optional)")
+            with st.expander("Click to modify column data types"):
+                st.info("💡 Convert columns to different data types. Only valid conversions will be applied.")
+                
+                conversion_made = False
+                dtype_options = ['Keep Current', 'int', 'float', 'string', 'category']
+                
+                # Create columns for better layout
+                for col in df.columns:
+                    col1, col2, col3 = st.columns([2, 2, 1])
+                    
+                    with col1:
+                        st.text(f"**{col}**")
+                    with col2:
+                        st.text(f"Current: {df[col].dtype}")
+                    with col3:
+                        new_dtype = st.selectbox(
+                            "Convert to",
+                            dtype_options,
+                            key=f"dtype_{col}",
+                            label_visibility="collapsed"
+                        )
+                        
+                        if new_dtype != 'Keep Current':
+                            try:
+                                if new_dtype == 'int':
+                                    df[col] = pd.to_numeric(df[col], errors='raise').astype('int64')
+                                    st.success(f"✓ Converted to int", icon="✅")
+                                    conversion_made = True
+                                elif new_dtype == 'float':
+                                    df[col] = pd.to_numeric(df[col], errors='raise').astype('float64')
+                                    st.success(f"✓ Converted to float", icon="✅")
+                                    conversion_made = True
+                                elif new_dtype == 'string':
+                                    df[col] = df[col].astype(str)
+                                    st.success(f"✓ Converted to string", icon="✅")
+                                    conversion_made = True
+                                elif new_dtype == 'category':
+                                    df[col] = df[col].astype('category')
+                                    st.success(f"✓ Converted to category", icon="✅")
+                                    conversion_made = True
+                            except Exception as e:
+                                st.error(f"❌ Cannot convert to {new_dtype}: {str(e)}", icon="⚠️")
+                
+                if conversion_made:
+                    st.success("✅ Data type conversions applied successfully!")
+                    st.info("Updated data types will be used for analysis. Click 'Proceed to EDA' to continue.")
+            
             # Proceed button
             if st.button("➡️ Proceed to EDA", type="primary", use_container_width=True):
                 st.session_state.df = df
