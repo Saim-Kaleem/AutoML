@@ -527,9 +527,38 @@ def step_issue_detection():
     df = st.session_state.df
     feature_types = utils.get_feature_types(df)
     
+    # Outlier detection method selection
+    st.info("🔧 Configure outlier detection method before running diagnostics")
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        outlier_method = st.radio(
+            "Outlier Detection Method",
+            ['iqr', 'zscore'],
+            format_func=lambda x: 'IQR Method (Interquartile Range)' if x == 'iqr' else 'Z-Score Method (Standard Deviations)',
+            help="**IQR**: Detects outliers beyond 1.5×IQR from Q1/Q3. Good for skewed data.\n\n**Z-Score**: Detects values >3 standard deviations from mean. Assumes normal distribution."
+        )
+    with col2:
+        if outlier_method == 'iqr':
+            st.markdown("""
+            **IQR Method (Recommended for most cases)**
+            - Detects values beyond Q1 - 1.5×IQR and Q3 + 1.5×IQR
+            - Robust to skewed distributions
+            - Less sensitive to extreme values
+            - Works well with non-normal data
+            """)
+        else:
+            st.markdown("""
+            **Z-Score Method**
+            - Detects values beyond ±3 standard deviations from mean
+            - Assumes data follows normal distribution
+            - More sensitive to extreme values
+            - Best for symmetric, bell-shaped distributions
+            """)
+    
     with st.spinner("🔍 Running comprehensive diagnostics..."):
         diagnostics = issue_detection.run_comprehensive_diagnostics(
-            df, feature_types['numeric'], feature_types['categorical']
+            df, feature_types['numeric'], feature_types['categorical'],
+            outlier_method=outlier_method
         )
         st.session_state.diagnostics = diagnostics
     

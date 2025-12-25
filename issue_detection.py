@@ -268,7 +268,8 @@ def detect_mixed_datatypes(df: pd.DataFrame) -> List[str]:
 
 def run_comprehensive_diagnostics(df: pd.DataFrame, numeric_cols: List[str], 
                                   categorical_cols: List[str], 
-                                  target_col: str = None) -> Dict[str, Any]:
+                                  target_col: str = None,
+                                  outlier_method: str = 'iqr') -> Dict[str, Any]:
     """
     Run comprehensive data quality diagnostics.
     
@@ -277,13 +278,14 @@ def run_comprehensive_diagnostics(df: pd.DataFrame, numeric_cols: List[str],
         numeric_cols: List of numeric column names
         categorical_cols: List of categorical column names
         target_col: Target column name (optional)
+        outlier_method: Method for outlier detection ('iqr' or 'zscore')
         
     Returns:
         Dictionary with all diagnostic results
     """
     diagnostics = {
         'missing_values': detect_missing_values(df),
-        'outliers': detect_all_outliers(df, numeric_cols, method='iqr'),
+        'outliers': detect_all_outliers(df, numeric_cols, method=outlier_method),
         'high_cardinality': detect_high_cardinality(df, categorical_cols),
         'constant_features': detect_constant_features(df),
         'duplicates': detect_duplicate_rows(df),
