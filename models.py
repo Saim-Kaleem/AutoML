@@ -188,14 +188,21 @@ def train_all_models(X_train, y_train, X_test, y_test,
     model_configs = get_model_configs(class_weight=class_weight_method)
     results = {}
     
-    for model_name, config in model_configs.items():
+    total_models = len(model_configs)
+    print(f"\n{'='*60}")
+    print(f"Starting training for {total_models} models...")
+    print(f"{'='*60}\n")
+    
+    for idx, (model_name, config) in enumerate(model_configs.items(), 1):
         try:
+            print(f"[{idx}/{total_models}] Training {model_name}...", end=' ', flush=True)
             model = config['model']
             
             # Class weights are already set in get_model_configs(), no need to set again
             result = train_single_model(model, X_train, y_train, X_test, y_test)
             result['description'] = config['description']
             results[model_name] = result
+            print(f"✓ Completed (Train time: {result['train_time']:.2f}s)")
             
         except Exception as e:
             results[model_name] = {
@@ -203,6 +210,11 @@ def train_all_models(X_train, y_train, X_test, y_test,
                 'error': str(e),
                 'description': config['description']
             }
+            print(f"✗ Failed: {str(e)}")
+    
+    print(f"\n{'='*60}")
+    print(f"Training complete! {len([r for r in results.values() if r.get('trained', False)])} models trained successfully.")
+    print(f"{'='*60}\n")
     
     return results
 

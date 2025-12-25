@@ -962,15 +962,43 @@ def step_train_models():
         config = st.session_state.preprocessing_config
         class_weight_method = config.get('class_weight_method') if config.get('use_class_weights') else None
         
-        with st.spinner("🤖 Training all models... This may take a while."):
-            model_results = models.train_all_models(
-                processed_data['X_train'],
-                processed_data['y_train'],
-                processed_data['X_test'],
-                processed_data['y_test'],
-                class_weight_method=class_weight_method
-            )
-            st.session_state.model_results = model_results
+        st.info("🤖 Training all models... This may take a while. Check the terminal for detailed progress.")
+        
+        status_placeholder = st.empty()
+        progress_bar = st.progress(0)
+        
+        # Get model count for progress tracking
+        model_configs = models.get_model_configs(class_weight=class_weight_method)
+        total_models = len(model_configs)
+        
+        status_placeholder.text("Starting model training...")
+        
+        # Train models with progress updates
+        model_results = {}
+        for idx, (model_name, config) in enumerate(model_configs.items(), 1):
+            status_placeholder.text(f"Training {model_name} ({idx}/{total_models})...")
+            progress_bar.progress(idx / total_models)
+            
+            try:
+                result = models.train_single_model(
+                    config['model'],
+                    processed_data['X_train'],
+                    processed_data['y_train'],
+                    processed_data['X_test'],
+                    processed_data['y_test']
+                )
+                result['description'] = config['description']
+                model_results[model_name] = result
+            except Exception as e:
+                model_results[model_name] = {
+                    'trained': False,
+                    'error': str(e),
+                    'description': config['description']
+                }
+        
+        status_placeholder.empty()
+        progress_bar.empty()
+        st.session_state.model_results = model_results
         
         st.success("✅ All models trained successfully!")
     
