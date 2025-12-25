@@ -2,7 +2,18 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import traceback
+import logging
 from io import StringIO
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Import all modules
 import utils
@@ -237,6 +248,8 @@ if 'processed_data' not in st.session_state:
     st.session_state.processed_data = None
 if 'model_results' not in st.session_state:
     st.session_state.model_results = None
+if 'initial_evaluation_results' not in st.session_state:
+    st.session_state.initial_evaluation_results = None  # NEW: Store original training metrics
 if 'evaluation_results' not in st.session_state:
     st.session_state.evaluation_results = None
 if 'optimization_results' not in st.session_state:
@@ -1020,6 +1033,12 @@ def step_train_models():
             processed_data['y_test']
         )
         st.session_state.evaluation_results = eval_results
+        st.session_state.initial_evaluation_results = eval_results  # NEW: Store initial metrics separately
+        
+        logger.info("STEP 6 - INITIAL TRAINING EVALUATION (stored separately):")
+        for model_name, result in list(eval_results.items())[:2]:
+            if 'test_metrics' in result:
+                logger.info(f"  {model_name}: F1={result['test_metrics']['f1_score']:.4f}, Acc={result['test_metrics']['accuracy']:.4f}")
     
     comparison_table = evaluation.create_comparison_table(eval_results)
     st.dataframe(comparison_table, use_container_width=True)
@@ -1058,7 +1077,9 @@ def step_optimize_models():
     if st.button("🚀 Start Optimization", type="primary", use_container_width=True):
         model_results = st.session_state.model_results
         processed_data = st.session_state.processed_data
-        model_configs = models.get_model_configs()
+        config = st.session_state.preprocessing_config
+        class_weight_method = config.get('class_weight_method') if config.get('use_class_weights') else None
+        model_configs = models.get_model_configs(class_weight=class_weight_method)
         
         with st.spinner("🔍 Optimizing hyperparameters... This will take several minutes."):
             progress_bar = st.progress(0)
@@ -1076,8 +1097,47 @@ def step_optimize_models():
             
             progress_bar.progress(100)
             st.session_state.optimization_results = opt_results
+            
+            logger.info("="*60)
+            logger.info("OPTIMIZATION COMPLETED - Starting automatic retraining")
+            
+            # Automatically retrain with best parameters
+            status_text.text("Retraining models with optimized parameters...")
+            retrained_results = optimization.retrain_with_best_params(
+                opt_results,
+                processed_data['X_train'],
+                processed_data['y_train'],
+                processed_data['X_test'],
+                processed_data['y_test']
+            )
+            st.session_state.model_results = retrained_results
+            
+            logger.info("RETRAINED MODEL_RESULTS - Sample:")
+            for model_name, result in list(retrained_results.items())[:2]:
+                if result.get('trained'):
+                    logger.info(f"  {model_name}: trained={result.get('trained')}, has_model={'model' in result}")
+            
+            # Re-evaluate with optimized models to update evaluation_results
+            status_text.text("Re-evaluating optimized models...")
+            eval_results = evaluation.evaluate_all_models(
+                retrained_results,
+                processed_data['X_train'],
+                processed_data['y_train'],
+                processed_data['X_test'],
+                processed_data['y_test']
+            )
+            st.session_state.evaluation_results = eval_results
+            
+            logger.info("UPDATED EVALUATION_RESULTS - Sample metrics:")
+            for model_name, result in list(eval_results.items())[:2]:
+                if 'test_metrics' in result:
+                    logger.info(f"  {model_name}: F1={result['test_metrics']['f1_score']:.4f}, Acc={result['test_metrics']['accuracy']:.4f}")
+            
+            logger.info("="*60)
+            
+            status_text.empty()
         
-        st.success("✅ Optimization completed!")
+        st.success("✅ Optimization completed and models retrained with best parameters!")
     
     # Show results
     if st.session_state.optimization_results:
@@ -1093,19 +1153,8 @@ def step_optimize_models():
             with st.expander(f"{model_name}"):
                 st.json(params)
         
-        # Retrain with best params
-        if st.button("🔄 Retrain with Best Parameters"):
-            with st.spinner("🤖 Retraining models with optimized parameters..."):
-                processed_data = st.session_state.processed_data
-                retrained_results = optimization.retrain_with_best_params(
-                    opt_results,
-                    processed_data['X_train'],
-                    processed_data['y_train'],
-                    processed_data['X_test'],
-                    processed_data['y_test']
-                )
-                st.session_state.model_results = retrained_results
-            st.success("✅ Models retrained with optimized parameters!")
+        # Models are automatically retrained with best parameters after optimization
+        st.info("ℹ️ Models have been automatically retrained with optimized hyperparameters.")
     
     # Navigation
     col1, col2 = st.columns([1, 5])
@@ -1123,11 +1172,26 @@ def step_evaluate_models():
     """Step 8: Comprehensive evaluation and comparison."""
     st.markdown('<div class="section-header">8️⃣ Model Evaluation & Comparison</div>', unsafe_allow_html=True)
     
+    logger.info("="*60)
+    logger.info("STEP 8: EVALUATION START")
+    logger.info(f"Optimization results exist: {st.session_state.optimization_results is not None}")
+    logger.info(f"Evaluation results exist: {st.session_state.evaluation_results is not None}")
+    
     eval_results = st.session_state.evaluation_results
     processed_data = st.session_state.processed_data
     
+    # Log current evaluation metrics before re-evaluation
+    if eval_results:
+        logger.info("BEFORE RE-EVALUATION - Sample metrics:")
+        for model_name, result in list(eval_results.items())[:2]:
+            if 'test_metrics' in result:
+                logger.info(f"  {model_name}: F1={result['test_metrics']['f1_score']:.4f}, Acc={result['test_metrics']['accuracy']:.4f}")
+    
     # Re-evaluate if optimization was done
     if st.session_state.optimization_results:
+        st.info("🔄 Optimization was done - re-evaluating models with optimized parameters...")
+        logger.info("Re-evaluating models with optimized parameters...")
+        
         with st.spinner("📊 Re-evaluating optimized models..."):
             eval_results = evaluation.evaluate_all_models(
                 st.session_state.model_results,
@@ -1137,6 +1201,18 @@ def step_evaluate_models():
                 processed_data['y_test']
             )
             st.session_state.evaluation_results = eval_results
+            st.success("✅ Re-evaluation completed with optimized models")
+        
+        # Log updated evaluation metrics
+        logger.info("AFTER RE-EVALUATION - Sample metrics:")
+        for model_name, result in list(eval_results.items())[:2]:
+            if 'test_metrics' in result:
+                logger.info(f"  {model_name}: F1={result['test_metrics']['f1_score']:.4f}, Acc={result['test_metrics']['accuracy']:.4f}")
+    else:
+        st.info("ℹ️ Using evaluation results from initial training (no optimization)")
+        logger.info("No optimization done - using initial evaluation results")
+    
+    logger.info("="*60)
     
     # Comparison table
     st.subheader("📊 Performance Comparison")
@@ -1210,6 +1286,44 @@ def step_generate_report():
     
     st.markdown('<div class="info-box">📄 Generate a comprehensive report with all findings</div>', unsafe_allow_html=True)
     
+    logger.info("="*60)
+    logger.info("STEP 9: REPORT GENERATION START")
+    logger.info(f"Optimization results exist: {st.session_state.optimization_results is not None}")
+    logger.info(f"Initial evaluation results exist: {st.session_state.initial_evaluation_results is not None}")
+    logger.info(f"Current evaluation results exist: {st.session_state.evaluation_results is not None}")
+    
+    # Compare initial vs current evaluation results
+    if st.session_state.initial_evaluation_results and st.session_state.evaluation_results:
+        logger.info("COMPARING INITIAL vs CURRENT EVALUATION RESULTS:")
+        for model_name in list(st.session_state.initial_evaluation_results.keys())[:2]:
+            initial = st.session_state.initial_evaluation_results[model_name]
+            current = st.session_state.evaluation_results[model_name]
+            if 'test_metrics' in initial and 'test_metrics' in current:
+                logger.info(f"  {model_name}:")
+                logger.info(f"    INITIAL (default params): F1={initial['test_metrics']['f1_score']:.4f}, Acc={initial['test_metrics']['accuracy']:.4f}")
+                logger.info(f"    CURRENT (optimized params): F1={current['test_metrics']['f1_score']:.4f}, Acc={current['test_metrics']['accuracy']:.4f}")
+    
+    # Log evaluation metrics being used for report
+    if st.session_state.evaluation_results:
+        logger.info("EVALUATION RESULTS USED IN REPORT:")
+        for model_name, result in list(st.session_state.evaluation_results.items())[:3]:
+            if 'test_metrics' in result:
+                logger.info(f"  {model_name}: F1={result['test_metrics']['f1_score']:.4f}, "
+                          f"Acc={result['test_metrics']['accuracy']:.4f}, "
+                          f"Time={result.get('training_time', 'N/A')}")
+    
+    # Log optimization info
+    if st.session_state.optimization_results:
+        logger.info("OPTIMIZATION RESULTS:")
+        for model_name, result in list(st.session_state.optimization_results.items())[:3]:
+            if result.get('optimized'):
+                logger.info(f"  {model_name}: CV_Score={result.get('best_score', 'N/A'):.4f}, "
+                          f"Params={result.get('best_params', {})}")
+    else:
+        logger.warning("No optimization results found!")
+    
+    logger.info("="*60)
+    
     # Collect all data
     dataset_info = utils.get_basic_stats(st.session_state.df)
     feature_types = utils.get_feature_types(st.session_state.df)
@@ -1232,6 +1346,7 @@ def step_generate_report():
             eda_summary=eda_summary,
             diagnostics=st.session_state.diagnostics,
             preprocessing_summary=st.session_state.processed_data['summary'],
+            initial_evaluation_results=st.session_state.initial_evaluation_results,  # NEW: Pass initial results
             evaluation_results=st.session_state.evaluation_results,
             optimization_results=st.session_state.optimization_results,
             best_model_name=best_model_name

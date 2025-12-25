@@ -1,8 +1,12 @@
 import pandas as pd
 import numpy as np
+import logging
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 import io
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 def generate_markdown_report(dataset_info: Dict[str, Any],
@@ -10,6 +14,7 @@ def generate_markdown_report(dataset_info: Dict[str, Any],
                             diagnostics: Dict[str, Any],
                             preprocessing_summary: Dict[str, Any],
                             evaluation_results: Dict[str, Dict[str, Any]],
+                            initial_evaluation_results: Optional[Dict[str, Dict[str, Any]]] = None,
                             optimization_results: Optional[Dict[str, Dict[str, Any]]] = None,
                             best_model_name: str = None) -> str:
     """
@@ -20,7 +25,8 @@ def generate_markdown_report(dataset_info: Dict[str, Any],
         eda_summary: EDA findings
         diagnostics: Issue detection results
         preprocessing_summary: Preprocessing decisions and results
-        evaluation_results: Model evaluation results
+        evaluation_results: Model evaluation results (optimized if optimization was done)
+        initial_evaluation_results: Initial evaluation results with default parameters
         optimization_results: Hyperparameter optimization results (optional)
         best_model_name: Name of the best performing model
         
@@ -158,13 +164,33 @@ def generate_markdown_report(dataset_info: Dict[str, Any],
         report.append(f"{i}. {model_name}")
     report.append("")
     
-    report.append("### 5.2 Performance Comparison\n")
+    # Show initial results if available
+    if initial_evaluation_results and optimization_results:
+        report.append("### 5.2 Initial Performance (Default Hyperparameters)\n")
+        report.append("| Model | Accuracy | Precision | Recall | F1-Score | Training Time (s) |")
+        report.append("|-------|----------|-----------|--------|----------|-------------------|")
+        
+        logger.info("REPORT GENERATOR - Writing INITIAL model performance (default params):")
+        for model_name, result in initial_evaluation_results.items():
+            if 'test_metrics' in result:
+                metrics = result['test_metrics']
+                logger.info(f"  {model_name}: F1={metrics['f1_score']:.4f}, Acc={metrics['accuracy']:.4f}")
+                report.append(f"| {model_name} | {metrics['accuracy']:.4f} | "
+                            f"{metrics['precision']:.4f} | {metrics['recall']:.4f} | "
+                            f"{metrics['f1_score']:.4f} | {result['training_time']:.4f} |")
+        report.append("")
+    
+    # Show final/optimized results
+    section_title = "### 5.3 Final Performance (Optimized Hyperparameters)\n" if optimization_results else "### 5.2 Performance Comparison\n"
+    report.append(section_title)
     report.append("| Model | Accuracy | Precision | Recall | F1-Score | Training Time (s) |")
     report.append("|-------|----------|-----------|--------|----------|-------------------|")
     
+    logger.info("REPORT GENERATOR - Writing FINAL/OPTIMIZED model performance:")
     for model_name, result in evaluation_results.items():
         if 'test_metrics' in result:
             metrics = result['test_metrics']
+            logger.info(f"  {model_name}: F1={metrics['f1_score']:.4f}, Acc={metrics['accuracy']:.4f}")
             report.append(f"| {model_name} | {metrics['accuracy']:.4f} | "
                         f"{metrics['precision']:.4f} | {metrics['recall']:.4f} | "
                         f"{metrics['f1_score']:.4f} | {result['training_time']:.4f} |")
