@@ -6,7 +6,7 @@ A comprehensive Streamlit web application that automates the entire machine lear
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Features](#-features)
 - [Technology Stack](#-technology-stack)
@@ -22,64 +22,80 @@ A comprehensive Streamlit web application that automates the entire machine lear
 
 ---
 
-## ✨ Features
+## Features
 
-### 🔍 **Automated Data Analysis**
+### **Automated Data Analysis**
 - Comprehensive exploratory data analysis (EDA)
 - Automatic feature type detection (numeric/categorical)
+- Manual datatype conversion (int, float, string, category)
 - Statistical summaries and visualizations
-- Correlation analysis with heatmaps
+- Correlation analysis with custom color-themed heatmaps
 - Missing value detection and visualization
 
-### 🔧 **Intelligent Issue Detection**
+### **Intelligent Issue Detection**
 - Missing value identification (global and per-feature)
-- Outlier detection (IQR and Z-score methods)
-- High-cardinality categorical features
-- Near-constant feature detection
-- Class imbalance analysis
+- **Configurable outlier detection** (IQR or Z-score methods with user selection)
+- **High-cardinality detection** (configurable threshold, default 20)
+- **Automatic exclusion** of high-cardinality columns from encoding
+- Near-constant feature detection (>95% dominance)
+- Class imbalance analysis with dynamic thresholds
 - Duplicate row detection
+- **Target variable validation** (automatic categorical conversion, cardinality checks)
 
-### ⚙️ **User-Controlled Preprocessing**
+### **User-Controlled Preprocessing**
+- **Manual Feature Selection:** Keep all, select to keep, or select to drop
+- **Constant Features:** Automatic removal of truly constant features
+- **Near-Constant Features:** Optional removal with user control
 - **Missing Values:** Multiple imputation strategies (mean, median, mode, constant)
 - **Outliers:** Remove or keep based on user decision
-- **Encoding:** One-Hot or Ordinal encoding for categorical features
+- **Encoding:** One-Hot or Ordinal encoding with high-cardinality exclusion
 - **Scaling:** StandardScaler or MinMaxScaler
 - **Train-Test Split:** Configurable with stratification
-- **Class Imbalance:** SMOTE, ADASYN, over/undersampling
+- **Class Imbalance:** 
+  - **Class Weights** (balanced, balanced_subsample) for 3 models
+  - **Resampling** (SMOTE, ADASYN, over/undersampling)
+- **Comprehensive Help Text:** Tooltips explaining every technical term and choice
 
-### 🤖 **Multiple Classification Models**
-1. Logistic Regression
+### **Multiple Classification Models**
+1. Logistic Regression (with class weights support)
 2. K-Nearest Neighbors (KNN)
 3. Decision Tree
 4. Naive Bayes (Gaussian)
-5. Random Forest
-6. Support Vector Machine (SVM)
+5. Random Forest (with class weights support)
+6. Support Vector Machine (SVM) (with class weights support)
 7. Rule-Based Classifier (baseline)
 
-### 🎯 **Hyperparameter Optimization**
+**Note:** Rule-Based Classifier is not optimized (no hyperparameters to tune)
+
+### **Hyperparameter Optimization**
 - GridSearchCV for exhaustive search
 - RandomizedSearchCV for faster optimization
 - Cross-validation support (configurable folds)
 - Automatic best parameter selection
 
-### 📊 **Comprehensive Evaluation**
+### **Comprehensive Evaluation**
 - Accuracy, Precision, Recall, F1-Score
-- Confusion matrices for all models
-- ROC-AUC curves (binary classification)
-- Side-by-side model comparison
+- Confusion matrices for all models (color-themed)
+- ROC-AUC curves for binary classification (color-themed)
+- Side-by-side model comparison with visualizations
+- Dual Winner Announcement: Best model by F1-score AND best by accuracy
 - Training time tracking
 - Detailed classification reports
+- Separate tracking of initial (default params) vs optimized performance
 
-### 📄 **Auto-Generated Reports**
+### **Auto-Generated Reports**
 - **Markdown** format
 - **HTML** format with styling
 - **PDF** format (comprehensive)
 - Includes all findings, decisions, and results
+- Shows both best models (by F1-score and accuracy)
+- Dual performance sections: Initial results vs optimized results
 - Downloadable and shareable
+- Terminal logging for debugging and transparency
 
 ---
 
-## 🛠 Technology Stack
+## Technology Stack
 
 ### Core Technologies
 - **Python 3.9+**
@@ -98,7 +114,7 @@ A comprehensive Streamlit web application that automates the entire machine lear
 
 ---
 
-## 📦 Installation
+## Installation
 
 ### 1. Clone the Repository
 
@@ -135,16 +151,17 @@ The application will open in your browser at `http://localhost:8501`
 
 ---
 
-## 🚀 Usage
+## Usage
 
 ### Step-by-Step Workflow
 
-#### 1️⃣ **Upload Dataset**
+#### **1, Upload Dataset**
 - Upload a CSV file (max 100 MB)
 - Must have at least 2 columns and 10 rows
 - View data preview, types, and basic statistics
+- Optional: Manually convert column datatypes (int, float, string, category)
 
-#### 2️⃣ **Exploratory Data Analysis**
+#### **2. Exploratory Data Analysis**
 - Automatic generation of:
   - Histograms for numeric features
   - Bar plots for categorical features
@@ -152,7 +169,10 @@ The application will open in your browser at `http://localhost:8501`
   - Correlation heatmap
   - Missing value summary
 
-#### 3️⃣ **Issue Detection**
+#### **3. Issue Detection**
+- Configure detection methods:
+  - Choose outlier method (IQR or Z-score)
+  - Set high-cardinality threshold (default: 20, range: 5-100)
 - Review detected issues:
   - Missing values per column
   - Outliers in numeric features
@@ -160,47 +180,56 @@ The application will open in your browser at `http://localhost:8501`
   - Near-constant features
   - Duplicate rows
 
-#### 4️⃣ **Select Target Variable**
+#### **4. Select Target Variable**
 - Choose the column to predict
+- Automatic validation: Ensures target is categorical with ≤20 unique classes
+- Automatic conversion: Numeric targets converted to categorical if valid
 - View target distribution
-- Analyze class balance
+- Analyze class balance with dynamic thresholds
 
-#### 5️⃣ **Configure Preprocessing**
+#### **5. Configure Preprocessing**
 Make decisions for:
-- Train-test split ratio
-- Missing value imputation strategies
+- Train-test split ratio with stratification option
+- Manual feature selection (keep all/select to keep/select to drop)
+- Constant features: Automatic removal of truly constant, optional removal of near-constant
+- Missing value imputation strategies (with help tooltips)
 - Outlier handling (keep/remove)
-- Categorical encoding method
+- Categorical encoding method (with high-cardinality exclusion option)
 - Feature scaling method
-- Class imbalance handling
+- Class imbalance handling:
+  - No handling
+  - Class weights (balanced/balanced_subsample)
+  - Resampling (SMOTE/ADASYN/over/undersample)
+- **All options include helpful tooltips explaining technical terms**
 
-#### 6️⃣ **Train Models**
+#### **6. Train Models**
 - Automatic preprocessing execution
 - Parallel training of all 7 models
 - Quick performance preview
 
-#### 7️⃣ **Optimize Hyperparameters** (Optional)
+#### **7. Optimize Hyperparameters** (Optional)
 - Choose GridSearchCV or RandomizedSearchCV
 - Configure cross-validation folds
 - Optimize all models automatically
 - Retrain with best parameters
 
-#### 8️⃣ **Evaluate & Compare**
+#### **8. Evaluate & Compare**
 - View comprehensive metrics table
-- Compare models with bar charts
-- Analyze confusion matrices
-- View ROC curves (binary classification)
-- Identify best performing model
+- Compare models with color-themed bar charts
+- Analyze confusion matrices (custom color scheme)
+- View ROC curves for binary classification (app-themed colors)
+- Identify TWO best models: One by F1-score, one by accuracy
+- Side-by-side display of both winners with all metrics
 - Download comparison CSV
 
-#### 9️⃣ **Generate Report**
+#### **9. Generate Report**
 - Auto-generate comprehensive report
 - Preview in browser
 - Download as Markdown, HTML, or PDF
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 automl_app/
@@ -220,7 +249,7 @@ automl_app/
 
 ---
 
-## 🔄 Workflow
+## Workflow
 
 ```
 ┌─────────────────┐
@@ -264,7 +293,7 @@ automl_app/
 
 ---
 
-## 🤖 Models Supported
+## Models Supported
 
 | Model | Type | Key Hyperparameters |
 |-------|------|---------------------|
@@ -278,16 +307,11 @@ automl_app/
 
 ---
 
-## 🌐 Deployment
+## Deployment
 
-### Deploy to Streamlit Cloud
+### Deployed to Streamlit Cloud
 
-1. Push code to GitHub
-2. Visit [share.streamlit.io](https://share.streamlit.io)
-3. Sign in with GitHub
-4. Select your repository
-5. Set main file: `app.py`
-6. Deploy!
+Visit [this link](https://share.streamlit.io)
 
 ### Environment Variables
 
@@ -301,7 +325,7 @@ No environment variables required. All processing is done in-memory.
 
 ---
 
-## 📊 Example Datasets
+## Example Datasets
 
 The system works with any classification dataset. Try these:
 
@@ -321,27 +345,29 @@ The system works with any classification dataset. Try these:
 
 ---
 
-## 🎨 Key Design Principles
+## Key Design Principles
 
 1. **User-Controlled Automation**: AI suggests, user approves
-2. **Transparency**: All decisions and results are visible
+2. **Transparency**: All decisions and results are visible with logging
 3. **Reproducibility**: Same inputs → same outputs
-4. **Educational**: Clear explanations of each step
+4. **Educational**: Clear explanations via help tooltips for every technical term
 5. **Production-Ready**: Follows ML best practices
+6. **Accessibility**: Beginner-friendly with expert-level options
+7. **Visual Consistency**: Color-themed charts matching app UI 
 
 ---
 
-## 🔒 Data Privacy
+## Data Privacy
 
-- ✅ All processing happens **in-browser** or on Streamlit Cloud
-- ✅ No data is stored to disk
-- ✅ No external API calls
-- ✅ Session-based state management
-- ✅ Data cleared on browser refresh
+- All processing happens **in-browser** or on Streamlit Cloud
+- No data is stored to disk
+- No external API calls
+- Session-based state management
+- Data cleared on browser refresh
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -365,7 +391,7 @@ pip install -r requirements.txt
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please:
 
@@ -377,21 +403,23 @@ Contributions are welcome! Please:
 
 ---
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License. See `LICENSE` file for details.
 
 ---
 
-## 👨‍💻 Author
+## Authors
 
-**Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
+**Saim Kaleem**
+- GitHub: [Saim-Kaleem](https://github.com/Saim-Kaleem)
+
+**Muhammad Ahad Waqas**
+- Github: [Ahad-Waqas](https://github.com/Ahad-Waqas)
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - scikit-learn team for excellent ML library
 - Streamlit for making ML apps accessible
@@ -399,7 +427,7 @@ This project is licensed under the MIT License. See `LICENSE` file for details.
 
 ---
 
-## 📈 Future Enhancements
+## Future Enhancements
 
 - [ ] Support for regression tasks
 - [ ] Ensemble model creation
@@ -412,7 +440,7 @@ This project is licensed under the MIT License. See `LICENSE` file for details.
 
 ---
 
-## 📞 Support
+## Support
 
 For issues or questions:
 1. Check the [Troubleshooting](#-troubleshooting) section
