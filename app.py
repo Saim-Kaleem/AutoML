@@ -265,6 +265,22 @@ st.markdown("""
     .stMarkdown {
         color: #374151;
     }
+    
+    /* Streamlit native metrics styling */
+    [data-testid="stMetricValue"] {
+        color: #f59e0b !important;
+        font-size: 2rem !important;
+        font-weight: 700 !important;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: #1f2937 !important;
+        font-weight: 600 !important;
+    }
+    
+    [data-testid="stMetricDelta"] {
+        font-weight: 600 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
