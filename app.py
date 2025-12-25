@@ -527,15 +527,25 @@ def step_issue_detection():
     df = st.session_state.df
     feature_types = utils.get_feature_types(df)
     
-    # Outlier detection method selection
-    st.info("🔧 Configure outlier detection method before running diagnostics")
-    col1, col2 = st.columns([1, 3])
+    # Detection configuration
+    st.info("🔧 Configure detection methods before running diagnostics")
+    
+    col1, col2, col3 = st.columns([2, 2, 1])
     with col1:
         outlier_method = st.radio(
             "Outlier Detection Method",
             ['iqr', 'zscore'],
             format_func=lambda x: 'IQR Method (Interquartile Range)' if x == 'iqr' else 'Z-Score Method (Standard Deviations)',
             help="**IQR**: Detects outliers beyond 1.5×IQR from Q1/Q3. Good for skewed data.\n\n**Z-Score**: Detects values >3 standard deviations from mean. Assumes normal distribution."
+        )
+    with col3:
+        cardinality_threshold = st.number_input(
+            "High Cardinality Threshold",
+            min_value=5,
+            max_value=100,
+            value=20,
+            step=5,
+            help="Flag categorical columns with more than this many unique values. Lower = stricter (recommended: 10-20)"
         )
     with col2:
         if outlier_method == 'iqr':
@@ -558,7 +568,8 @@ def step_issue_detection():
     with st.spinner("🔍 Running comprehensive diagnostics..."):
         diagnostics = issue_detection.run_comprehensive_diagnostics(
             df, feature_types['numeric'], feature_types['categorical'],
-            outlier_method=outlier_method
+            outlier_method=outlier_method,
+            cardinality_threshold=cardinality_threshold
         )
         st.session_state.diagnostics = diagnostics
     
@@ -754,6 +765,32 @@ def step_configure_preprocessing():
             format_func=lambda x: 'One-Hot Encoding' if x == 'onehot' else 'Ordinal Encoding'
         )
         config['encoding_type'] = encoding_type
+        
+        # High cardinality handling
+        if diagnostics.get('high_cardinality'):
+            st.warning(f"⚠️ Found {len(diagnostics['high_cardinality'])} high-cardinality columns")
+            
+            with st.expander("View High-Cardinality Columns", expanded=True):
+                hc_df = pd.DataFrame(diagnostics['high_cardinality'])
+                st.dataframe(hc_df, use_container_width=True)
+                
+                st.info("💡 **Recommendation**: Exclude high-cardinality columns (like IDs) from encoding to prevent feature explosion.")
+                
+                exclude_high_card = st.checkbox(
+                    "Exclude High-Cardinality Columns from Encoding",
+                    value=True,
+                    help="Prevents creating hundreds/thousands of features from ID-like columns"
+                )
+                config['exclude_high_cardinality'] = exclude_high_card
+                
+                if exclude_high_card:
+                    # Store the list of high-cardinality column names to exclude
+                    high_card_cols = [item['column'] for item in diagnostics['high_cardinality']]
+                    config['exclude_high_cardinality_cols'] = high_card_cols
+                    st.success(f"✅ These {len(high_card_cols)} columns will be dropped before encoding: {', '.join(high_card_cols)}")
+                else:
+                    config['exclude_high_cardinality_cols'] = []
+                    st.error("⚠️ Warning: Encoding these columns may create thousands of features and cause memory issues!")
     
     # Scaling
     st.subheader("⚖️ Feature Scaling")

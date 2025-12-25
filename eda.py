@@ -44,7 +44,7 @@ def generate_numeric_histograms(df: pd.DataFrame, numeric_cols: List[str]) -> pl
     return fig
 
 
-def generate_categorical_barplots(df: pd.DataFrame, categorical_cols: List[str], max_categories: int = 20) -> plt.Figure:
+def generate_categorical_barplots(df: pd.DataFrame, categorical_cols: List[str], max_categories: int = 10) -> plt.Figure:
     """
     Generate bar plots for categorical features.
     

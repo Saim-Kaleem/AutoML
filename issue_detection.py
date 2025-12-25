@@ -122,14 +122,14 @@ def detect_all_outliers(df: pd.DataFrame, numeric_cols: List[str], method: str =
     }
 
 
-def detect_high_cardinality(df: pd.DataFrame, categorical_cols: List[str], threshold: int = 50) -> List[Dict[str, Any]]:
+def detect_high_cardinality(df: pd.DataFrame, categorical_cols: List[str], threshold: int = 20) -> List[Dict[str, Any]]:
     """
     Detect categorical columns with high cardinality.
     
     Args:
         df: Input dataframe
         categorical_cols: List of categorical column names
-        threshold: Cardinality threshold
+        threshold: Cardinality threshold (default 20)
         
     Returns:
         List of high-cardinality columns with details
@@ -269,7 +269,8 @@ def detect_mixed_datatypes(df: pd.DataFrame) -> List[str]:
 def run_comprehensive_diagnostics(df: pd.DataFrame, numeric_cols: List[str], 
                                   categorical_cols: List[str], 
                                   target_col: str = None,
-                                  outlier_method: str = 'iqr') -> Dict[str, Any]:
+                                  outlier_method: str = 'iqr',
+                                  cardinality_threshold: int = 20) -> Dict[str, Any]:
     """
     Run comprehensive data quality diagnostics.
     
@@ -279,6 +280,7 @@ def run_comprehensive_diagnostics(df: pd.DataFrame, numeric_cols: List[str],
         categorical_cols: List of categorical column names
         target_col: Target column name (optional)
         outlier_method: Method for outlier detection ('iqr' or 'zscore')
+        cardinality_threshold: Threshold for high cardinality detection (default 20)
         
     Returns:
         Dictionary with all diagnostic results
@@ -286,7 +288,7 @@ def run_comprehensive_diagnostics(df: pd.DataFrame, numeric_cols: List[str],
     diagnostics = {
         'missing_values': detect_missing_values(df),
         'outliers': detect_all_outliers(df, numeric_cols, method=outlier_method),
-        'high_cardinality': detect_high_cardinality(df, categorical_cols),
+        'high_cardinality': detect_high_cardinality(df, categorical_cols, threshold=cardinality_threshold),
         'constant_features': detect_constant_features(df),
         'duplicates': detect_duplicate_rows(df),
         'mixed_types': detect_mixed_datatypes(df)

@@ -99,7 +99,8 @@ class DataPreprocessor:
     
     def encode_categorical(self, X_train: pd.DataFrame, X_test: pd.DataFrame,
                           encoding_type: str = 'onehot',
-                          categorical_cols: List[str] = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
+                          categorical_cols: List[str] = None,
+                          exclude_cols: List[str] = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Encode categorical features.
         
@@ -108,6 +109,7 @@ class DataPreprocessor:
             X_test: Test features
             encoding_type: 'onehot' or 'ordinal'
             categorical_cols: List of categorical columns (if None, auto-detect)
+            exclude_cols: List of columns to exclude from encoding (e.g., high cardinality)
             
         Returns:
             Tuple of (X_train_encoded, X_test_encoded)
@@ -118,7 +120,19 @@ class DataPreprocessor:
         if categorical_cols is None:
             categorical_cols = X_train.select_dtypes(include=['object', 'category']).columns.tolist()
         
+        # Exclude high-cardinality or specified columns
+        if exclude_cols:
+            # Drop excluded columns
+            X_train = X_train.drop(columns=[col for col in exclude_cols if col in X_train.columns])
+            X_test = X_test.drop(columns=[col for col in exclude_cols if col in X_test.columns])
+            
+            # Remove from categorical_cols list
+            categorical_cols = [col for col in categorical_cols if col not in exclude_cols]
+            
+            self.preprocessing_config['excluded_columns'] = exclude_cols
+        
         if not categorical_cols:
+            self.feature_names = X_train.columns.tolist()
             return X_train, X_test
         
         if encoding_type == 'onehot':
@@ -392,7 +406,8 @@ def prepare_data_pipeline(df: pd.DataFrame, target_col: str,
     if config.get('encode_categorical', False):
         X_train, X_test = preprocessor.encode_categorical(
             X_train, X_test,
-            encoding_type=config.get('encoding_type', 'onehot')
+            encoding_type=config.get('encoding_type', 'onehot'),
+            exclude_cols=config.get('exclude_high_cardinality_cols', [])
         )
     
     # Scale features
