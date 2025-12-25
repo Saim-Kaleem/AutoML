@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 from typing import Dict, List, Tuple, Any
 import io
 
@@ -35,10 +36,10 @@ def generate_numeric_histograms(df: pd.DataFrame, numeric_cols: List[str]) -> pl
     
     for idx, col in enumerate(numeric_cols):
         ax = axes[idx]
-        df[col].hist(bins=30, ax=ax, edgecolor='black', alpha=0.7)
-        ax.set_title(f'Distribution of {col}', fontsize=10, fontweight='bold')
-        ax.set_xlabel(col)
-        ax.set_ylabel('Frequency')
+        df[col].hist(bins=30, ax=ax, color='#f59e0b', edgecolor='#1f2937', alpha=0.8)
+        ax.set_title(f'Distribution of {col}', fontsize=10, fontweight='bold', color='#1f2937')
+        ax.set_xlabel(col, color='#1f2937')
+        ax.set_ylabel('Frequency', color='#1f2937')
         ax.grid(True, alpha=0.3)
     
     # Hide unused subplots
@@ -80,10 +81,10 @@ def generate_categorical_barplots(df: pd.DataFrame, categorical_cols: List[str],
     for idx, col in enumerate(categorical_cols):
         ax = axes[idx]
         value_counts = df[col].value_counts().head(max_categories)
-        value_counts.plot(kind='bar', ax=ax, color='steelblue', edgecolor='black')
-        ax.set_title(f'Distribution of {col}', fontsize=10, fontweight='bold')
-        ax.set_xlabel(col)
-        ax.set_ylabel('Count')
+        value_counts.plot(kind='bar', ax=ax, color='#f59e0b', edgecolor='#1f2937')
+        ax.set_title(f'Distribution of {col}', fontsize=10, fontweight='bold', color='#1f2937')
+        ax.set_xlabel(col, color='#1f2937')
+        ax.set_ylabel('Count', color='#1f2937')
         ax.tick_params(axis='x', rotation=45)
         ax.grid(True, alpha=0.3, axis='y')
         
@@ -129,11 +130,11 @@ def generate_boxplots(df: pd.DataFrame, numeric_cols: List[str]) -> plt.Figure:
     for idx, col in enumerate(numeric_cols):
         ax = axes[idx]
         df.boxplot(column=col, ax=ax, patch_artist=True,
-                   boxprops=dict(facecolor='lightblue', edgecolor='black'),
-                   medianprops=dict(color='red', linewidth=2),
-                   flierprops=dict(marker='o', markerfacecolor='red', markersize=5, alpha=0.5))
-        ax.set_title(f'Boxplot of {col}', fontsize=10, fontweight='bold')
-        ax.set_ylabel(col)
+                   boxprops=dict(facecolor='#f59e0b', edgecolor='#1f2937', alpha=0.7),
+                   medianprops=dict(color='#1f2937', linewidth=2),
+                   flierprops=dict(marker='o', markerfacecolor='#ef4444', markersize=5, alpha=0.6))
+        ax.set_title(f'Boxplot of {col}', fontsize=10, fontweight='bold', color='#1f2937')
+        ax.set_ylabel(col, color='#1f2937')
         ax.grid(True, alpha=0.3, axis='y')
     
     # Hide unused subplots
@@ -160,11 +161,17 @@ def generate_correlation_heatmap(df: pd.DataFrame, numeric_cols: List[str]) -> p
     
     corr_matrix = df[numeric_cols].corr()
     
+    # Create custom brown-white-green colormap to match app theme
+    # Brown (complementing orange theme) -> White -> Green (success color)
+    colors = ['#8b4513', '#d2691e', '#f4a460', '#ffffff', '#90ee90', '#4ade80', '#10b981']
+    n_bins = 100
+    cmap = LinearSegmentedColormap.from_list('brown_white_green', colors, N=n_bins)
+    
     fig, ax = plt.subplots(figsize=(12, 10))
-    sns.heatmap(corr_matrix, annot=True, fmt='.2f', cmap='coolwarm', 
+    sns.heatmap(corr_matrix, annot=True, fmt='.2f', cmap=cmap, 
                 center=0, square=True, linewidths=1, cbar_kws={"shrink": 0.8},
                 ax=ax, vmin=-1, vmax=1)
-    ax.set_title('Correlation Heatmap', fontsize=14, fontweight='bold', pad=20)
+    ax.set_title('Correlation Heatmap', fontsize=14, fontweight='bold', pad=20, color='#1f2937')
     plt.tight_layout()
     return fig
 
@@ -237,10 +244,10 @@ def generate_missing_value_plot(df: pd.DataFrame) -> plt.Figure:
     
     fig, ax = plt.subplots(figsize=(10, max(6, len(missing_data) * 0.4)))
     
-    ax.barh(missing_data['Column'], missing_data['Missing_Percentage'], color='coral', edgecolor='black')
-    ax.set_xlabel('Missing Percentage (%)', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Column', fontsize=12, fontweight='bold')
-    ax.set_title('Missing Values by Column', fontsize=14, fontweight='bold', pad=20)
+    ax.barh(missing_data['Column'], missing_data['Missing_Percentage'], color='#ef4444', edgecolor='#1f2937')
+    ax.set_xlabel('Missing Percentage (%)', fontsize=12, fontweight='bold', color='#1f2937')
+    ax.set_ylabel('Column', fontsize=12, fontweight='bold', color='#1f2937')
+    ax.set_title('Missing Values by Column', fontsize=14, fontweight='bold', pad=20, color='#1f2937')
     ax.grid(True, alpha=0.3, axis='x')
     
     # Add percentage labels
@@ -268,14 +275,16 @@ def generate_target_distribution(df: pd.DataFrame, target_col: str) -> plt.Figur
     fig, ax = plt.subplots(figsize=(10, 6))
     
     value_counts = df[target_col].value_counts().sort_index()
-    colors = sns.color_palette('Set2', len(value_counts))
+    # Use app theme colors: orange and green variations
+    colors = ['#f59e0b', '#10b981', '#f97316', '#14b8a6', '#fb923c', '#22c55e'] * (len(value_counts) // 6 + 1)
+    colors = colors[:len(value_counts)]
     
     bars = ax.bar(value_counts.index.astype(str), value_counts.values, 
-                  color=colors, edgecolor='black', linewidth=1.5)
+                  color=colors, edgecolor='#1f2937', linewidth=1.5)
     
-    ax.set_xlabel('Class', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Count', fontsize=12, fontweight='bold')
-    ax.set_title(f'Target Variable Distribution: {target_col}', fontsize=14, fontweight='bold', pad=20)
+    ax.set_xlabel('Class', fontsize=12, fontweight='bold', color='#1f2937')
+    ax.set_ylabel('Count', fontsize=12, fontweight='bold', color='#1f2937')
+    ax.set_title(f'Target Variable Distribution: {target_col}', fontsize=14, fontweight='bold', pad=20, color='#1f2937')
     ax.grid(True, alpha=0.3, axis='y')
     
     # Add count labels on bars

@@ -249,7 +249,7 @@ if 'processed_data' not in st.session_state:
 if 'model_results' not in st.session_state:
     st.session_state.model_results = None
 if 'initial_evaluation_results' not in st.session_state:
-    st.session_state.initial_evaluation_results = None  # NEW: Store original training metrics
+    st.session_state.initial_evaluation_results = None
 if 'evaluation_results' not in st.session_state:
     st.session_state.evaluation_results = None
 if 'optimization_results' not in st.session_state:
@@ -264,24 +264,24 @@ def main():
     
     # Sidebar navigation
     with st.sidebar:
-        st.header("📋 Workflow Steps")
+        st.header("Workflow Steps")
         steps = [
-            "1️⃣ Upload Dataset",
-            "2️⃣ Exploratory Data Analysis",
-            "3️⃣ Issue Detection",
-            "4️⃣ Select Target Variable",
-            "5️⃣ Configure Preprocessing",
-            "6️⃣ Train Models",
-            "7️⃣ Optimize Hyperparameters",
-            "8️⃣ Evaluate & Compare",
-            "9️⃣ Generate Report"
+            "1. Upload Dataset",
+            "2. Exploratory Data Analysis",
+            "3. Issue Detection",
+            "4. Select Target Variable",
+            "5. Configure Preprocessing",
+            "6. Train Models",
+            "7. Optimize Hyperparameters",
+            "8. Evaluate & Compare",
+            "9. Generate Report"
         ]
         
         for i, step_name in enumerate(steps, 1):
             if i < st.session_state.step:
                 st.success(step_name + " ✓")
             elif i == st.session_state.step:
-                st.info(step_name + " ⏳")
+                st.info(step_name)
             else:
                 st.text(step_name)
         
@@ -330,7 +330,7 @@ def main():
 
 def step_upload_dataset():
     """Step 1: Upload and validate dataset."""
-    st.markdown('<div class="section-header">1️⃣ Upload Dataset</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Upload Dataset</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="info-box">📁 Upload a CSV file (max 100 MB). The dataset must have at least 2 columns and 10 rows.</div>', unsafe_allow_html=True)
     
@@ -397,7 +397,7 @@ def step_upload_dataset():
             st.dataframe(dtypes_df, use_container_width=True)
             
             # Data type conversion option
-            st.subheader("🔄 Convert Data Types (Optional)")
+            st.subheader("Convert Data Types (Optional)")
             with st.expander("Click to modify column data types"):
                 st.info("💡 Convert columns to different data types. Only valid conversions will be applied.")
                 
@@ -458,13 +458,13 @@ def step_upload_dataset():
 
 def step_exploratory_analysis():
     """Step 2: Exploratory Data Analysis."""
-    st.markdown('<div class="section-header">2️⃣ Exploratory Data Analysis</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Exploratory Data Analysis</div>', unsafe_allow_html=True)
     
     df = st.session_state.df
     feature_types = utils.get_feature_types(df)
     
     # Basic statistics
-    st.subheader("📊 Dataset Statistics")
+    st.subheader("Dataset Statistics")
     basic_stats = utils.get_basic_stats(df)
     
     col1, col2, col3 = st.columns(3)
@@ -479,7 +479,7 @@ def step_exploratory_analysis():
         st.metric("Duplicate Rows", basic_stats['duplicate_rows'])
     
     # Missing values
-    st.subheader("🔍 Missing Values")
+    st.subheader("Missing Values")
     missing_summary = eda.get_missing_value_summary(df)
     
     if not missing_summary.empty:
@@ -492,17 +492,17 @@ def step_exploratory_analysis():
     
     # Numeric features
     if feature_types['numeric']:
-        st.subheader("📈 Numeric Features Distribution")
+        st.subheader("Numeric Features Distribution")
         fig = eda.generate_numeric_histograms(df, feature_types['numeric'])
         if fig:
             st.pyplot(fig)
         
-        st.subheader("📦 Boxplots (Outlier Detection)")
+        st.subheader("Boxplots (Outlier Detection)")
         fig = eda.generate_boxplots(df, feature_types['numeric'])
         if fig:
             st.pyplot(fig)
         
-        st.subheader("🔥 Correlation Heatmap")
+        st.subheader("Correlation Heatmap")
         fig = eda.generate_correlation_heatmap(df, feature_types['numeric'])
         if fig:
             st.pyplot(fig)
@@ -516,7 +516,7 @@ def step_exploratory_analysis():
     
     # Categorical features
     if feature_types['categorical']:
-        st.subheader("📊 Categorical Features Distribution")
+        st.subheader("Categorical Features Distribution")
         fig = eda.generate_categorical_barplots(df, feature_types['categorical'])
         if fig:
             st.pyplot(fig)
@@ -535,7 +535,7 @@ def step_exploratory_analysis():
 
 def step_issue_detection():
     """Step 3: Detect data quality issues."""
-    st.markdown('<div class="section-header">3️⃣ Issue Detection</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Issue Detection</div>', unsafe_allow_html=True)
     
     df = st.session_state.df
     feature_types = utils.get_feature_types(df)
@@ -558,7 +558,7 @@ def step_issue_detection():
             max_value=100,
             value=20,
             step=5,
-            help="Flag categorical columns with more than this many unique values. Lower = stricter (recommended: 10-20)"
+            help="**Cardinality** = number of unique values in a column. High cardinality columns (like IDs) create too many features when encoded. This threshold flags columns that should be excluded. Recommended: 10-20 for classification."
         )
     with col2:
         if outlier_method == 'iqr':
@@ -589,7 +589,7 @@ def step_issue_detection():
     # Summary
     issues_summary = issue_detection.get_issues_summary(diagnostics)
     
-    st.subheader("📋 Issues Summary")
+    st.subheader("Issues Summary")
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("Missing Values", issues_summary['missing_values'])
@@ -649,11 +649,17 @@ def step_issue_detection():
 
 def step_select_target():
     """Step 4: Select target variable."""
-    st.markdown('<div class="section-header">4️⃣ Select Target Variable</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Select Target Variable</div>', unsafe_allow_html=True)
     
     df = st.session_state.df
+    diagnostics = st.session_state.diagnostics
     
     st.markdown('<div class="info-box">📌 Select the column you want to predict (target variable)</div>', unsafe_allow_html=True)
+    
+    # Get cardinality threshold from diagnostics or use default
+    cardinality_threshold = 20  # Default for classification
+    
+    st.info(f"ℹ️ Target variable must be categorical with ≤ {cardinality_threshold} unique classes")
     
     target_col = st.selectbox(
         "Target Variable",
@@ -662,10 +668,70 @@ def step_select_target():
     )
     
     if target_col != '-- Select --':
+        target_data = df[target_col].copy()
+        n_unique = target_data.nunique()
+        original_dtype = target_data.dtype
+        
+        logger.info(f"Target selected: {target_col}, dtype: {original_dtype}, unique values: {n_unique}")
+        
+        # Validation and conversion logic
+        is_valid = True
+        conversion_performed = False
+        error_message = None
+        
+        # Check if numeric
+        if pd.api.types.is_numeric_dtype(target_data):
+            st.warning(f"⚠️ Target '{target_col}' is numeric ({original_dtype}). Attempting to convert to categorical...")
+            
+            # Check cardinality before conversion
+            if n_unique > cardinality_threshold:
+                is_valid = False
+                error_message = f"❌ Cannot use '{target_col}' as target: {n_unique} unique values exceeds threshold of {cardinality_threshold}. This is a regression problem, not classification."
+                logger.error(f"Target validation failed: {n_unique} unique values > {cardinality_threshold}")
+            else:
+                # Convert to categorical
+                try:
+                    df[target_col] = df[target_col].astype('category')
+                    st.session_state.df = df
+                    target_data = df[target_col]
+                    conversion_performed = True
+                    st.success(f"✅ Successfully converted '{target_col}' to categorical type")
+                    logger.info(f"Converted target '{target_col}' to categorical")
+                except Exception as e:
+                    is_valid = False
+                    error_message = f"❌ Failed to convert '{target_col}' to categorical: {str(e)}"
+                    logger.error(f"Target conversion failed: {str(e)}")
+        
+        # Check if categorical/object type
+        elif pd.api.types.is_object_dtype(target_data) or pd.api.types.is_categorical_dtype(target_data):
+            # Check cardinality
+            if n_unique > cardinality_threshold:
+                is_valid = False
+                error_message = f"❌ Cannot use '{target_col}' as target: {n_unique} unique categories exceeds threshold of {cardinality_threshold}. Consider grouping categories or choosing a different target."
+                logger.error(f"Target validation failed: {n_unique} categories > {cardinality_threshold}")
+            else:
+                st.success(f"✅ Target '{target_col}' is categorical with {n_unique} classes")
+                logger.info(f"Target '{target_col}' validated: {n_unique} classes")
+        else:
+            is_valid = False
+            error_message = f"❌ Unsupported data type for target '{target_col}': {original_dtype}"
+            logger.error(f"Target validation failed: unsupported dtype {original_dtype}")
+        
+        # Display validation result
+        if not is_valid:
+            st.error(error_message)
+            st.info("💡 **Tip**: For classification, target should have a reasonable number of distinct categories (typically 2-20). For more classes, consider multi-class classification or grouping similar categories.")
+            
+            if st.button("⬅️ Back to Issue Detection"):
+                st.session_state.step = 3
+                st.rerun()
+            return
+        
+        # If validation passed, store and continue
         st.session_state.target_col = target_col
         
         # Show target distribution
-        st.subheader("🎯 Target Distribution")
+        st.subheader("Target Distribution")
         fig = eda.generate_target_distribution(df, target_col)
         if fig:
             st.pyplot(fig)
@@ -709,7 +775,7 @@ def step_select_target():
 
 def step_configure_preprocessing():
     """Step 5: Configure preprocessing options."""
-    st.markdown('<div class="section-header">5️⃣ Configure Preprocessing</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Configure Preprocessing</div>', unsafe_allow_html=True)
     
     df = st.session_state.df
     diagnostics = st.session_state.diagnostics
@@ -720,19 +786,27 @@ def step_configure_preprocessing():
     config = {}
     
     # Train-test split
-    st.subheader("📊 Train-Test Split")
+    st.subheader("Train-Test Split")
     col1, col2 = st.columns(2)
     with col1:
-        test_size = st.slider("Test Set Size", 0.1, 0.4, 0.2, 0.05)
+        test_size = st.slider(
+            "Test Set Size", 
+            0.1, 0.4, 0.2, 0.05,
+            help="Percentage of data reserved for testing. 20% is standard. Higher = more reliable test metrics but less training data."
+        )
         config['test_size'] = test_size
     with col2:
-        stratify = st.checkbox("Stratified Split", value=True)
+        stratify = st.checkbox(
+            "Stratified Split", 
+            value=True,
+            help="Maintains the same class distribution in train and test sets. Recommended for imbalanced datasets to ensure both sets represent all classes proportionally."
+        )
         config['stratify'] = stratify
     
     config['random_state'] = 42
     
     # Feature Selection
-    st.subheader("📋 Feature Selection")
+    st.subheader("Feature Selection")
     st.markdown("Choose which features to include in the model training.")
     
     # Get all feature columns (excluding target)
@@ -787,10 +861,59 @@ def step_configure_preprocessing():
             config['features_to_drop'] = []
             config['features_to_keep'] = all_features
     
+    # Constant features
+    if diagnostics['constant_features']:
+        st.subheader("Constant Features Handling")
+        
+        # Separate truly constant from near-constant
+        truly_constant = [f for f in diagnostics['constant_features'] if f['unique_values'] == 1]
+        near_constant = [f for f in diagnostics['constant_features'] if f['unique_values'] > 1]
+        
+        if truly_constant:
+            st.warning(f"⚠️ Found {len(truly_constant)} truly constant feature(s) (all values identical). These will be automatically removed.")
+            with st.expander("View Constant Features"):
+                const_df = pd.DataFrame(truly_constant)
+                st.dataframe(const_df, use_container_width=True)
+            config['remove_constant_features'] = True
+            config['constant_features_to_remove'] = [f['column'] for f in truly_constant]
+        else:
+            config['remove_constant_features'] = False
+            config['constant_features_to_remove'] = []
+        
+        if near_constant:
+            st.info(f"ℹ️ Found {len(near_constant)} near-constant feature(s) (one value dominates >95%)")
+            with st.expander("View Near-Constant Features"):
+                near_const_df = pd.DataFrame(near_constant)
+                st.dataframe(near_const_df, use_container_width=True)
+            
+            remove_near_constant = st.checkbox(
+                "Remove Near-Constant Features",
+                value=False,
+                help="Remove features where one value dominates >95% of the data. These provide little information but consume resources. Generally safe to remove."
+            )
+            config['remove_near_constant_features'] = remove_near_constant
+            if remove_near_constant:
+                config['near_constant_features_to_remove'] = [f['column'] for f in near_constant]
+                st.success(f"✅ Will remove {len(near_constant)} near-constant features")
+            else:
+                config['near_constant_features_to_remove'] = []
+        else:
+            config['remove_near_constant_features'] = False
+            config['near_constant_features_to_remove'] = []
+    else:
+        config['remove_constant_features'] = False
+        config['constant_features_to_remove'] = []
+        config['remove_near_constant_features'] = False
+        config['near_constant_features_to_remove'] = []
+    
     # Missing values
     if diagnostics['missing_values']['has_missing']:
         st.subheader("🔧 Missing Value Imputation")
-        handle_missing = st.checkbox("Handle Missing Values", value=True)
+        handle_missing = st.checkbox(
+            "Handle Missing Values", 
+            value=True,
+            help="Replace missing values with estimated values. Recommended to prevent errors during model training."
+        )
         config['handle_missing'] = handle_missing
         
         if handle_missing:
@@ -798,23 +921,33 @@ def step_configure_preprocessing():
             with col1:
                 numeric_strategy = st.selectbox(
                     "Numeric Strategy",
-                    ['mean', 'median', 'constant']
+                    ['mean', 'median', 'constant'],
+                    help="**Mean**: Average value (sensitive to outliers)\n**Median**: Middle value (robust to outliers, recommended)\n**Constant**: Fill with a specific number"
                 )
                 config['numeric_imputation'] = numeric_strategy
                 if numeric_strategy == 'constant':
-                    config['constant_value'] = st.number_input("Constant Value", value=0)
+                    config['constant_value'] = st.number_input(
+                        "Constant Value", 
+                        value=0,
+                        help="The specific number to use for filling missing values"
+                    )
             
             with col2:
                 categorical_strategy = st.selectbox(
                     "Categorical Strategy",
-                    ['most_frequent', 'constant']
+                    ['most_frequent', 'constant'],
+                    help="**Most Frequent**: Use the most common category (recommended)\n**Constant**: Fill with a specific value like 'Unknown'"
                 )
                 config['categorical_imputation'] = categorical_strategy
     
     # Outliers
     if diagnostics['outliers']['columns_with_outliers']:
-        st.subheader("📉 Outlier Handling")
-        remove_outliers = st.checkbox("Remove Outliers", value=False)
+        st.subheader("Outlier Handling")
+        remove_outliers = st.checkbox(
+            "Remove Outliers", 
+            value=False,
+            help="Remove extreme values that may distort model training. ⚠️ Use cautiously: outliers may be legitimate data points or important anomalies. Only removes from training set, not test set."
+        )
         config['remove_outliers'] = remove_outliers
         
         if remove_outliers:
@@ -823,15 +956,20 @@ def step_configure_preprocessing():
             config['outlier_indices'] = []
     
     # Encoding
-    st.subheader("🔤 Categorical Encoding")
-    encode_categorical = st.checkbox("Encode Categorical Features", value=True)
+    st.subheader("Categorical Encoding")
+    encode_categorical = st.checkbox(
+        "Encode Categorical Features", 
+        value=True,
+        help="Convert text categories into numbers that machine learning models can understand. Required for most algorithms."
+    )
     config['encode_categorical'] = encode_categorical
     
     if encode_categorical:
         encoding_type = st.radio(
             "Encoding Method",
             ['onehot', 'ordinal'],
-            format_func=lambda x: 'One-Hot Encoding' if x == 'onehot' else 'Ordinal Encoding'
+            format_func=lambda x: 'One-Hot Encoding' if x == 'onehot' else 'Ordinal Encoding',
+            help="**One-Hot**: Creates binary columns for each category (e.g., Red→[1,0,0], Green→[0,1,0]). Best for nominal categories with no order.\n\n**Ordinal**: Assigns numbers to categories (e.g., Low=1, Medium=2, High=3). Use only when categories have a natural order."
         )
         config['encoding_type'] = encoding_type
         
@@ -862,26 +1000,31 @@ def step_configure_preprocessing():
                     st.error("⚠️ Warning: Encoding these columns may create thousands of features and cause memory issues!")
     
     # Scaling
-    st.subheader("⚖️ Feature Scaling")
-    scale_features = st.checkbox("Scale Features", value=True)
+    st.subheader("Feature Scaling")
+    scale_features = st.checkbox(
+        "Scale Features", 
+        value=True,
+        help="Normalize features to similar ranges. Important for distance-based algorithms (KNN, SVM) and neural networks. Not critical for tree-based models."
+    )
     config['scale_features'] = scale_features
     
     if scale_features:
         scaling_type = st.radio(
             "Scaling Method",
             ['standard', 'minmax'],
-            format_func=lambda x: 'StandardScaler (z-score)' if x == 'standard' else 'MinMaxScaler (0-1)'
+            format_func=lambda x: 'StandardScaler (z-score)' if x == 'standard' else 'MinMaxScaler (0-1)',
+            help="**StandardScaler**: Centers data around mean=0 with std=1. Good for normally distributed data. Values can be negative.\n\n**MinMaxScaler**: Scales data to range [0,1]. Good for bounded data. All values stay positive."
         )
         config['scaling_type'] = scaling_type
     
     # Class imbalance
     if diagnostics.get('class_imbalance', {}).get('is_imbalanced', False):
-        st.subheader("⚖️ Class Imbalance Handling")
+        st.subheader("Class Imbalance Handling")
         
         imbalance_strategy = st.radio(
             "Choose Strategy",
             ["No Handling", "Class Weights", "Resampling"],
-            help="Class weights adjust model training, resampling modifies the dataset"
+            help="**No Handling**: Train models as-is. May favor majority class.\n\n**Class Weights**: Give higher importance to minority class during training. Memory-efficient, works for most models.\n\n**Resampling**: Modify dataset by adding/removing samples. Changes data distribution."
         )
         
         if imbalance_strategy == "Class Weights":
@@ -891,7 +1034,7 @@ def step_configure_preprocessing():
             weight_method = st.selectbox(
                 "Class Weight Method",
                 ['balanced', 'balanced_subsample'],
-                help="'balanced' uses n_samples / (n_classes * np.bincount(y))"
+                help="**Balanced**: Adjusts weights inversely proportional to class frequencies. Formula: n_samples / (n_classes × class_count)\n\n**Balanced Subsample**: Similar to balanced but computed on bootstrap samples (for Random Forest only)"
             )
             config['class_weight_method'] = weight_method
             
@@ -910,7 +1053,8 @@ def step_configure_preprocessing():
                     'oversample': 'Random Oversampling',
                     'smote': 'SMOTE (Synthetic Minority Over-sampling)',
                     'adasyn': 'ADASYN (Adaptive Synthetic Sampling)'
-                }[x]
+                }[x],
+                help="**Undersample**: Randomly remove majority class samples. Fast but loses data.\n\n**Oversample**: Duplicate minority class samples. May cause overfitting.\n\n**SMOTE**: Create synthetic minority samples by interpolating between existing ones. Recommended for most cases.\n\n**ADASYN**: Like SMOTE but focuses on harder-to-learn samples. Best for complex boundaries."
             )
             config['imbalance_method'] = imbalance_method
             
@@ -921,7 +1065,7 @@ def step_configure_preprocessing():
     st.session_state.preprocessing_config = config
     
     # Show summary
-    st.subheader("📝 Configuration Summary")
+    st.subheader("Configuration Summary")
     st.json(config)
     
     # Navigation
@@ -944,7 +1088,7 @@ def run_preprocessing(_df, target_col, config):
 
 def step_train_models():
     """Step 6: Train all models."""
-    st.markdown('<div class="section-header">6️⃣ Train Models</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Train Models</div>', unsafe_allow_html=True)
     
     df = st.session_state.df
     target_col = st.session_state.target_col
@@ -960,13 +1104,42 @@ def step_train_models():
         
         # Show summary
         summary = processed_data['summary']
+        rows_removed = summary['rows_removed']
+        
         col1, col2, col3 = st.columns(3)
         with col1:
             st.metric("Training Samples", summary['final_shape'][0])
         with col2:
             st.metric("Features", summary['final_shape'][1])
         with col3:
-            st.metric("Rows Removed", summary['rows_removed'])
+            # Handle both removal and addition of rows
+            if rows_removed > 0:
+                st.metric("Rows Removed", rows_removed)
+            elif rows_removed < 0:
+                st.metric("Rows Added (Resampling)", abs(rows_removed))
+            else:
+                st.metric("Rows Changed", 0)
+    
+    processed_data = st.session_state.processed_data
+    
+    # Also show summary again if already processed (for returning to this step)
+    if processed_data:
+        st.info("ℹ️ Preprocessing already completed. Showing summary:")
+        summary = processed_data['summary']
+        rows_removed = summary['rows_removed']
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Training Samples", summary['final_shape'][0])
+        with col2:
+            st.metric("Features", summary['final_shape'][1])
+        with col3:
+            if rows_removed > 0:
+                st.metric("Rows Removed", rows_removed)
+            elif rows_removed < 0:
+                st.metric("Rows Added (Resampling)", abs(rows_removed))
+            else:
+                st.metric("Rows Changed", 0)
     
     processed_data = st.session_state.processed_data
     
@@ -975,7 +1148,7 @@ def step_train_models():
         config = st.session_state.preprocessing_config
         class_weight_method = config.get('class_weight_method') if config.get('use_class_weights') else None
         
-        st.info("🤖 Training all models... This may take a while. Check the terminal for detailed progress.")
+        st.info("🤖 Training all models... This may take a while.")
         
         status_placeholder = st.empty()
         progress_bar = st.progress(0)
@@ -1018,12 +1191,12 @@ def step_train_models():
     model_results = st.session_state.model_results
     
     # Show training summary
-    st.subheader("📊 Training Summary")
+    st.subheader("Training Summary")
     summary_table = models.create_model_summary_table(model_results)
     st.dataframe(summary_table, use_container_width=True)
     
     # Quick evaluation
-    st.subheader("⚡ Quick Evaluation")
+    st.subheader("Quick Evaluation")
     with st.spinner("📊 Evaluating models..."):
         eval_results = evaluation.evaluate_all_models(
             model_results,
@@ -1057,20 +1230,32 @@ def step_train_models():
 
 def step_optimize_models():
     """Step 7: Hyperparameter optimization."""
-    st.markdown('<div class="section-header">7️⃣ Hyperparameter Optimization</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Hyperparameter Optimization</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="info-box">🔧 Optimize model hyperparameters using cross-validation</div>', unsafe_allow_html=True)
     
     # Optimization settings
     col1, col2, col3 = st.columns(3)
     with col1:
-        opt_method = st.radio("Search Method", ['grid', 'random'],
-                             format_func=lambda x: 'GridSearchCV' if x == 'grid' else 'RandomizedSearchCV')
+        opt_method = st.radio(
+            "Search Method", 
+            ['grid', 'random'],
+            format_func=lambda x: 'GridSearchCV' if x == 'grid' else 'RandomizedSearchCV',
+            help="**GridSearchCV**: Tests all parameter combinations. Thorough but slow. Best for small parameter spaces.\n\n**RandomizedSearchCV**: Tests random parameter combinations. Faster and often finds good solutions. Best for large parameter spaces."
+        )
     with col2:
-        cv_folds = st.slider("CV Folds", 3, 10, 5)
+        cv_folds = st.slider(
+            "CV Folds", 
+            3, 10, 5,
+            help="Number of cross-validation splits. Higher = more reliable but slower. 5 is standard. Use 3 for small datasets, 10 for large datasets."
+        )
     with col3:
         if opt_method == 'random':
-            n_iter = st.slider("Iterations", 10, 100, 50)
+            n_iter = st.slider(
+                "Iterations", 
+                10, 100, 50,
+                help="Number of random parameter combinations to try. More = better chance of finding optimal parameters but takes longer. 50 is a good balance."
+            )
         else:
             n_iter = 50
     
@@ -1143,11 +1328,11 @@ def step_optimize_models():
     if st.session_state.optimization_results:
         opt_results = st.session_state.optimization_results
         
-        st.subheader("📊 Optimization Results")
+        st.subheader("Optimization Results")
         summary_table = optimization.create_optimization_summary(opt_results)
         st.dataframe(summary_table, use_container_width=True)
         
-        st.subheader("🎯 Best Parameters")
+        st.subheader("Best Parameters")
         best_params = optimization.get_best_params_summary(opt_results)
         for model_name, params in best_params.items():
             with st.expander(f"{model_name}"):
@@ -1170,7 +1355,7 @@ def step_optimize_models():
 
 def step_evaluate_models():
     """Step 8: Comprehensive evaluation and comparison."""
-    st.markdown('<div class="section-header">8️⃣ Model Evaluation & Comparison</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Model Evaluation & Comparison</div>', unsafe_allow_html=True)
     
     logger.info("="*60)
     logger.info("STEP 8: EVALUATION START")
@@ -1215,18 +1400,18 @@ def step_evaluate_models():
     logger.info("="*60)
     
     # Comparison table
-    st.subheader("📊 Performance Comparison")
+    st.subheader("Performance Comparison")
     comparison_table = evaluation.create_comparison_table(eval_results)
     st.dataframe(comparison_table, use_container_width=True)
     
     # Metrics visualization
-    st.subheader("📈 Metrics Comparison")
+    st.subheader("Metrics Comparison")
     fig = evaluation.plot_metrics_comparison(eval_results)
     if fig:
         st.pyplot(fig)
     
     # Confusion matrices
-    st.subheader("🎯 Confusion Matrices")
+    st.subheader("Confusion Matrices")
     fig = evaluation.plot_all_confusion_matrices(eval_results)
     if fig:
         st.pyplot(fig)
@@ -1234,31 +1419,56 @@ def step_evaluate_models():
     # ROC curves (if binary classification)
     y_test = processed_data['y_test']
     if len(np.unique(y_test)) == 2:
-        st.subheader("📉 ROC Curves")
+        st.subheader("ROC Curves")
         fig = evaluation.plot_all_roc_curves(eval_results, y_test)
         if fig:
             st.pyplot(fig)
     
-    # Best model
-    st.subheader("🏆 Best Performing Model")
-    best_model_name, best_result = evaluation.get_best_model(eval_results, metric='f1_score')
+    # Best models - show two winners
+    st.subheader("Best Performing Models")
     
-    if best_model_name:
-        st.success(f"**{best_model_name}** achieved the best F1-score!")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### Best by F1-Score")
+        best_f1_name, best_f1_result = evaluation.get_best_model(eval_results, metric='f1_score')
         
-        metrics = best_result['test_metrics']
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Accuracy", f"{metrics['accuracy']:.4f}")
-        with col2:
-            st.metric("Precision", f"{metrics['precision']:.4f}")
-        with col3:
-            st.metric("Recall", f"{metrics['recall']:.4f}")
-        with col4:
-            st.metric("F1-Score", f"{metrics['f1_score']:.4f}")
+        if best_f1_name:
+            st.success(f"**{best_f1_name}**")
+            
+            metrics = best_f1_result['test_metrics']
+            subcol1, subcol2 = st.columns(2)
+            with subcol1:
+                st.metric("Accuracy", f"{metrics['accuracy']:.4f}")
+                st.metric("Precision", f"{metrics['precision']:.4f}")
+            with subcol2:
+                st.metric("Recall", f"{metrics['recall']:.4f}")
+                st.metric("F1-Score", f"{metrics['f1_score']:.4f}", delta="Winner")
+    
+    with col2:
+        st.markdown("### Best by Accuracy")
+        best_acc_name, best_acc_result = evaluation.get_best_model(eval_results, metric='accuracy')
+        
+        if best_acc_name:
+            st.success(f"**{best_acc_name}**")
+            
+            metrics = best_acc_result['test_metrics']
+            subcol1, subcol2 = st.columns(2)
+            with subcol1:
+                st.metric("Accuracy", f"{metrics['accuracy']:.4f}", delta="Winner")
+                st.metric("Precision", f"{metrics['precision']:.4f}")
+            with subcol2:
+                st.metric("Recall", f"{metrics['recall']:.4f}")
+                st.metric("F1-Score", f"{metrics['f1_score']:.4f}")
+    
+    # Note if they're the same model
+    if best_f1_name == best_acc_name:
+        st.info(f"ℹ️ **{best_f1_name}** wins on both metrics!")
+    else:
+        st.warning("⚠️ Different models excel at different metrics. Choose based on your problem requirements.")
     
     # Download comparison
-    st.subheader("💾 Download Results")
+    st.subheader("Download Results")
     csv = comparison_table.to_csv(index=False)
     st.download_button(
         "📥 Download Comparison Table (CSV)",
@@ -1282,7 +1492,7 @@ def step_evaluate_models():
 
 def step_generate_report():
     """Step 9: Generate and download comprehensive report."""
-    st.markdown('<div class="section-header">9️⃣ Generate Report</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Generate Report</div>', unsafe_allow_html=True)
     
     st.markdown('<div class="info-box">📄 Generate a comprehensive report with all findings</div>', unsafe_allow_html=True)
     
@@ -1333,10 +1543,14 @@ def step_generate_report():
         feature_types['categorical']
     )
     
-    # Get best model
-    best_model_name, _ = evaluation.get_best_model(
+    # Get both best models
+    best_f1_name, _ = evaluation.get_best_model(
         st.session_state.evaluation_results,
         metric='f1_score'
+    )
+    best_acc_name, _ = evaluation.get_best_model(
+        st.session_state.evaluation_results,
+        metric='accuracy'
     )
     
     # Generate report
@@ -1349,17 +1563,19 @@ def step_generate_report():
             initial_evaluation_results=st.session_state.initial_evaluation_results,  # NEW: Pass initial results
             evaluation_results=st.session_state.evaluation_results,
             optimization_results=st.session_state.optimization_results,
-            best_model_name=best_model_name
+            best_model_name=best_f1_name,  # For backward compatibility
+            best_f1_model=best_f1_name,  # NEW: Best by F1
+            best_acc_model=best_acc_name  # NEW: Best by Accuracy
         )
     
     st.success("✅ Report generated successfully!")
     
     # Preview
-    with st.expander("👀 Preview Report", expanded=True):
+    with st.expander("Preview Report", expanded=True):
         st.markdown(markdown_report)
     
     # Download options
-    st.subheader("💾 Download Report")
+    st.subheader("Download Report")
     
     col1, col2, col3 = st.columns(3)
     

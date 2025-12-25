@@ -183,13 +183,13 @@ def plot_confusion_matrix(cm: np.ndarray, class_names: List[str] = None,
     
     fig, ax = plt.subplots(figsize=(8, 6))
     
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+    sns.heatmap(cm, annot=True, fmt='d', cmap='YlOrBr', 
                 xticklabels=class_names, yticklabels=class_names,
                 ax=ax, cbar_kws={'label': 'Count'})
     
-    ax.set_xlabel('Predicted Label', fontsize=12, fontweight='bold')
-    ax.set_ylabel('True Label', fontsize=12, fontweight='bold')
-    ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
+    ax.set_xlabel('Predicted Label', fontsize=12, fontweight='bold', color='#1f2937')
+    ax.set_ylabel('True Label', fontsize=12, fontweight='bold', color='#1f2937')
+    ax.set_title(title, fontsize=14, fontweight='bold', pad=20, color='#1f2937')
     
     plt.tight_layout()
     return fig
@@ -233,13 +233,13 @@ def plot_all_confusion_matrices(evaluation_results: Dict[str, Dict[str, Any]],
         else:
             class_names_local = class_names
         
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+        sns.heatmap(cm, annot=True, fmt='d', cmap='YlOrBr',
                    xticklabels=class_names_local, yticklabels=class_names_local,
                    ax=ax, cbar_kws={'label': 'Count'})
         
-        ax.set_xlabel('Predicted', fontsize=10)
-        ax.set_ylabel('True', fontsize=10)
-        ax.set_title(model_name, fontsize=11, fontweight='bold')
+        ax.set_xlabel('Predicted', fontsize=10, color='#1f2937')
+        ax.set_ylabel('True', fontsize=10, color='#1f2937')
+        ax.set_title(model_name, fontsize=11, fontweight='bold', color='#1f2937')
     
     # Hide unused subplots
     for idx in range(len(valid_models), len(axes)):
@@ -280,16 +280,16 @@ def plot_roc_curve(y_test, y_test_proba, model_name: str = 'Model') -> plt.Figur
     # Plot
     fig, ax = plt.subplots(figsize=(8, 6))
     
-    ax.plot(fpr, tpr, color='darkorange', lw=2,
+    ax.plot(fpr, tpr, color='#f59e0b', lw=2,
            label=f'ROC curve (AUC = {roc_auc:.2f})')
-    ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--',
+    ax.plot([0, 1], [0, 1], color='#1f2937', lw=2, linestyle='--',
            label='Random Classifier')
     
     ax.set_xlim([0.0, 1.0])
     ax.set_ylim([0.0, 1.05])
-    ax.set_xlabel('False Positive Rate', fontsize=12, fontweight='bold')
-    ax.set_ylabel('True Positive Rate', fontsize=12, fontweight='bold')
-    ax.set_title(f'ROC Curve - {model_name}', fontsize=14, fontweight='bold', pad=20)
+    ax.set_xlabel('False Positive Rate', fontsize=12, fontweight='bold', color='#1f2937')
+    ax.set_ylabel('True Positive Rate', fontsize=12, fontweight='bold', color='#1f2937')
+    ax.set_title(f'ROC Curve - {model_name}', fontsize=14, fontweight='bold', pad=20, color='#1f2937')
     ax.legend(loc='lower right', fontsize=10)
     ax.grid(True, alpha=0.3)
     
@@ -317,7 +317,9 @@ def plot_all_roc_curves(evaluation_results: Dict[str, Dict[str, Any]],
     
     fig, ax = plt.subplots(figsize=(10, 8))
     
-    colors = plt.cm.tab10(np.linspace(0, 1, len(evaluation_results)))
+    # Use app theme colors
+    theme_colors = ['#f59e0b', '#10b981', '#ef4444', '#f97316', '#14b8a6', '#fb923c', '#22c55e']
+    colors = (theme_colors * (len(evaluation_results) // len(theme_colors) + 1))[:len(evaluation_results)]
     
     for idx, (model_name, result) in enumerate(evaluation_results.items()):
         if 'y_test_proba' in result and result['y_test_proba'] is not None:
@@ -336,14 +338,14 @@ def plot_all_roc_curves(evaluation_results: Dict[str, Dict[str, Any]],
             ax.plot(fpr, tpr, color=colors[idx], lw=2,
                    label=f'{model_name} (AUC = {roc_auc:.2f})')
     
-    ax.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--',
+    ax.plot([0, 1], [0, 1], color='#1f2937', lw=2, linestyle='--',
            label='Random Classifier', alpha=0.5)
     
     ax.set_xlim([0.0, 1.0])
     ax.set_ylim([0.0, 1.05])
-    ax.set_xlabel('False Positive Rate', fontsize=12, fontweight='bold')
-    ax.set_ylabel('True Positive Rate', fontsize=12, fontweight='bold')
-    ax.set_title('ROC Curves - All Models', fontsize=14, fontweight='bold', pad=20)
+    ax.set_xlabel('False Positive Rate', fontsize=12, fontweight='bold', color='#1f2937')
+    ax.set_ylabel('True Positive Rate', fontsize=12, fontweight='bold', color='#1f2937')
+    ax.set_title('ROC Curves - All Models', fontsize=14, fontweight='bold', pad=20, color='#1f2937')
     ax.legend(loc='lower right', fontsize=9)
     ax.grid(True, alpha=0.3)
     
@@ -386,14 +388,14 @@ def plot_metrics_comparison(evaluation_results: Dict[str, Dict[str, Any]]) -> pl
     
     fig, ax = plt.subplots(figsize=(12, 6))
     
-    ax.bar(x - 1.5*width, accuracy, width, label='Accuracy', color='steelblue')
-    ax.bar(x - 0.5*width, precision, width, label='Precision', color='orange')
-    ax.bar(x + 0.5*width, recall, width, label='Recall', color='green')
-    ax.bar(x + 1.5*width, f1, width, label='F1-Score', color='red')
+    ax.bar(x - 1.5*width, accuracy, width, label='Accuracy', color='#f59e0b', edgecolor='#1f2937')
+    ax.bar(x - 0.5*width, precision, width, label='Precision', color='#10b981', edgecolor='#1f2937')
+    ax.bar(x + 0.5*width, recall, width, label='Recall', color='#f97316', edgecolor='#1f2937')
+    ax.bar(x + 1.5*width, f1, width, label='F1-Score', color='#14b8a6', edgecolor='#1f2937')
     
-    ax.set_xlabel('Model', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Score', fontsize=12, fontweight='bold')
-    ax.set_title('Model Performance Comparison', fontsize=14, fontweight='bold', pad=20)
+    ax.set_xlabel('Model', fontsize=12, fontweight='bold', color='#1f2937')
+    ax.set_ylabel('Score', fontsize=12, fontweight='bold', color='#1f2937')
+    ax.set_title('Model Performance Comparison', fontsize=14, fontweight='bold', pad=20, color='#1f2937')
     ax.set_xticks(x)
     ax.set_xticklabels(models, rotation=45, ha='right')
     ax.legend(fontsize=10)

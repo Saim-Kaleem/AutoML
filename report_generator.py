@@ -16,7 +16,9 @@ def generate_markdown_report(dataset_info: Dict[str, Any],
                             evaluation_results: Dict[str, Dict[str, Any]],
                             initial_evaluation_results: Optional[Dict[str, Dict[str, Any]]] = None,
                             optimization_results: Optional[Dict[str, Dict[str, Any]]] = None,
-                            best_model_name: str = None) -> str:
+                            best_model_name: str = None,
+                            best_f1_model: str = None,
+                            best_acc_model: str = None) -> str:
     """
     Generate comprehensive Markdown report.
     
@@ -28,7 +30,9 @@ def generate_markdown_report(dataset_info: Dict[str, Any],
         evaluation_results: Model evaluation results (optimized if optimization was done)
         initial_evaluation_results: Initial evaluation results with default parameters
         optimization_results: Hyperparameter optimization results (optional)
-        best_model_name: Name of the best performing model
+        best_model_name: Name of the best performing model (for backward compatibility)
+        best_f1_model: Name of the best model by F1-score
+        best_acc_model: Name of the best model by accuracy
         
     Returns:
         Markdown report as string
@@ -219,26 +223,63 @@ def generate_markdown_report(dataset_info: Dict[str, Any],
                     report.append(f"- {param}: {value}")
         report.append("")
     
-    # Best Model
-    if best_model_name:
-        report.append("## 7. Best Model\n")
-        report.append(f"**Model:** {best_model_name}\n")
+    # Best Models
+    if best_f1_model or best_acc_model:
+        report.append("## 7. Best Performing Models\n")
         
-        if best_model_name in evaluation_results:
-            best_result = evaluation_results[best_model_name]
-            if 'test_metrics' in best_result:
-                metrics = best_result['test_metrics']
-                report.append("**Test Set Performance:**")
-                report.append(f"- Accuracy: {metrics['accuracy']:.4f}")
-                report.append(f"- Precision: {metrics['precision']:.4f}")
-                report.append(f"- Recall: {metrics['recall']:.4f}")
-                report.append(f"- F1-Score: {metrics['f1_score']:.4f}")
-                report.append(f"- Training Time: {best_result['training_time']:.4f}s\n")
+        # Use provided values or fall back to best_model_name for backward compatibility
+        f1_winner = best_f1_model or best_model_name
+        acc_winner = best_acc_model or best_model_name
         
-        report.append("**Justification:**")
-        report.append(f"The {best_model_name} achieved the best F1-score on the test set, "
-                     "indicating the best balance between precision and recall. "
-                     "This model is recommended for deployment.\n")
+        # Check if same model wins both
+        if f1_winner == acc_winner:
+            report.append(f"**🏆 Overall Winner:** {f1_winner}\n")
+            report.append(f"This model achieved the best performance on both F1-score and accuracy metrics.\n")
+            
+            if f1_winner in evaluation_results:
+                best_result = evaluation_results[f1_winner]
+                if 'test_metrics' in best_result:
+                    metrics = best_result['test_metrics']
+                    report.append("**Test Set Performance:**")
+                    report.append(f"- Accuracy: {metrics['accuracy']:.4f}")
+                    report.append(f"- Precision: {metrics['precision']:.4f}")
+                    report.append(f"- Recall: {metrics['recall']:.4f}")
+                    report.append(f"- F1-Score: {metrics['f1_score']:.4f}")
+                    report.append(f"- Training Time: {best_result['training_time']:.4f}s\n")
+        else:
+            # Different winners for different metrics
+            report.append("Different models excelled at different metrics:\n")
+            
+            # F1-Score winner
+            report.append(f"### 7.1 Best by F1-Score: {f1_winner}\n")
+            if f1_winner in evaluation_results:
+                best_result = evaluation_results[f1_winner]
+                if 'test_metrics' in best_result:
+                    metrics = best_result['test_metrics']
+                    report.append("**Test Set Performance:**")
+                    report.append(f"- Accuracy: {metrics['accuracy']:.4f}")
+                    report.append(f"- Precision: {metrics['precision']:.4f}")
+                    report.append(f"- Recall: {metrics['recall']:.4f}")
+                    report.append(f"- F1-Score: {metrics['f1_score']:.4f} ⭐")
+                    report.append(f"- Training Time: {best_result['training_time']:.4f}s\n")
+            
+            # Accuracy winner
+            report.append(f"### 7.2 Best by Accuracy: {acc_winner}\n")
+            if acc_winner in evaluation_results:
+                best_result = evaluation_results[acc_winner]
+                if 'test_metrics' in best_result:
+                    metrics = best_result['test_metrics']
+                    report.append("**Test Set Performance:**")
+                    report.append(f"- Accuracy: {metrics['accuracy']:.4f} ⭐")
+                    report.append(f"- Precision: {metrics['precision']:.4f}")
+                    report.append(f"- Recall: {metrics['recall']:.4f}")
+                    report.append(f"- F1-Score: {metrics['f1_score']:.4f}")
+                    report.append(f"- Training Time: {best_result['training_time']:.4f}s\n")
+        
+        report.append("**Model Selection Guidance:**")
+        report.append("- **F1-Score:** Best balance between precision and recall, recommended for imbalanced datasets")
+        report.append("- **Accuracy:** Best overall correctness, suitable when classes are balanced")
+        report.append("- Choose based on your specific problem requirements and cost of false positives vs false negatives\n")
     
     # Conclusion
     report.append("## 8. Conclusion\n")
@@ -248,7 +289,14 @@ def generate_markdown_report(dataset_info: Dict[str, Any],
     report.append("- Trained and evaluated multiple classification models")
     if optimization_results:
         report.append("- Optimized hyperparameters for improved performance")
-    report.append(f"- Identified {best_model_name} as the best performing model\n")
+    
+    # Update conclusion based on winners
+    f1_winner = best_f1_model or best_model_name
+    acc_winner = best_acc_model or best_model_name
+    if f1_winner == acc_winner:
+        report.append(f"- Identified {f1_winner} as the best performing model on both metrics\n")
+    else:
+        report.append(f"- Identified {f1_winner} (F1-score) and {acc_winner} (accuracy) as top performers\n")
     
     report.append("**Recommendations:**")
     report.append("- Consider feature engineering to potentially improve performance")

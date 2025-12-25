@@ -387,6 +387,20 @@ def prepare_data_pipeline(df: pd.DataFrame, target_col: str,
     # Initialize preprocessor
     preprocessor = DataPreprocessor()
     
+    # Remove constant features (truly constant - automatically removed)
+    if config.get('remove_constant_features', False) and config.get('constant_features_to_remove'):
+        const_cols = config['constant_features_to_remove']
+        X_train = X_train.drop(columns=[col for col in const_cols if col in X_train.columns])
+        X_test = X_test.drop(columns=[col for col in const_cols if col in X_test.columns])
+        preprocessor.preprocessing_config['removed_constant_features'] = const_cols
+    
+    # Remove near-constant features (user option)
+    if config.get('remove_near_constant_features', False) and config.get('near_constant_features_to_remove'):
+        near_const_cols = config['near_constant_features_to_remove']
+        X_train = X_train.drop(columns=[col for col in near_const_cols if col in X_train.columns])
+        X_test = X_test.drop(columns=[col for col in near_const_cols if col in X_test.columns])
+        preprocessor.preprocessing_config['removed_near_constant_features'] = near_const_cols
+    
     # Manual feature selection (drop unwanted columns)
     if config.get('manual_feature_selection', False) and config.get('features_to_drop'):
         features_to_drop = config['features_to_drop']

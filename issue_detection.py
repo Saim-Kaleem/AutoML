@@ -202,12 +202,12 @@ def detect_class_imbalance(y: pd.Series, threshold: float = None) -> Dict[str, A
     # Auto-calculate threshold based on number of classes if not provided
     if threshold is None:
         # Expected balanced percentage = 100% / n_classes
-        # Threshold = 50% of expected balanced percentage
-        # For binary: 50% of 50% = 25%
-        # For 3 classes: 50% of 33.3% = 16.7%
-        # For 5 classes: 50% of 20% = 10%
+        # Threshold = 75% of expected balanced percentage
+        # For binary: 75% of 50% = 37.5%
+        # For 3 classes: 75% of 33.3% = 25.0%
+        # For 5 classes: 75% of 20% = 15%
         expected_balanced = 1.0 / n_classes
-        threshold = expected_balanced * 0.5
+        threshold = expected_balanced * 0.75
     
     min_class = class_percentages.idxmin()
     min_percentage = class_percentages.min()
