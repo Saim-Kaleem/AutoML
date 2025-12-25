@@ -24,9 +24,14 @@ def generate_numeric_histograms(df: pd.DataFrame, numeric_cols: List[str]) -> pl
     n_rows = (len(numeric_cols) - 1) // n_cols + 1
     
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 4 * n_rows))
+    
+    # Handle single subplot case properly
     if n_rows == 1 and n_cols == 1:
-        axes = np.array([axes])
-    axes = axes.flatten() if len(numeric_cols) > 1 else [axes]
+        axes = [axes]  # Make it a list for consistent indexing
+    elif len(numeric_cols) == 1:
+        axes = [axes] if not isinstance(axes, np.ndarray) else [axes.item()]
+    else:
+        axes = axes.flatten()
     
     for idx, col in enumerate(numeric_cols):
         ax = axes[idx]
@@ -63,9 +68,14 @@ def generate_categorical_barplots(df: pd.DataFrame, categorical_cols: List[str],
     n_rows = (len(categorical_cols) - 1) // n_cols + 1
     
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(14, 4 * n_rows))
+    
+    # Handle single subplot case properly
     if n_rows == 1 and n_cols == 1:
-        axes = np.array([axes])
-    axes = axes.flatten() if len(categorical_cols) > 1 else [axes]
+        axes = [axes]  # Make it a list for consistent indexing
+    elif len(categorical_cols) == 1:
+        axes = [axes] if not isinstance(axes, np.ndarray) else [axes.item()]
+    else:
+        axes = axes.flatten()
     
     for idx, col in enumerate(categorical_cols):
         ax = axes[idx]
@@ -107,9 +117,14 @@ def generate_boxplots(df: pd.DataFrame, numeric_cols: List[str]) -> plt.Figure:
     n_rows = (len(numeric_cols) - 1) // n_cols + 1
     
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 4 * n_rows))
+    
+    # Handle single subplot case properly
     if n_rows == 1 and n_cols == 1:
-        axes = np.array([axes])
-    axes = axes.flatten() if len(numeric_cols) > 1 else [axes]
+        axes = [axes]  # Make it a list for consistent indexing
+    elif len(numeric_cols) == 1:
+        axes = [axes] if not isinstance(axes, np.ndarray) else [axes.item()]
+    else:
+        axes = axes.flatten()
     
     for idx, col in enumerate(numeric_cols):
         ax = axes[idx]

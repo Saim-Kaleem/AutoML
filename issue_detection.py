@@ -183,19 +183,31 @@ def detect_constant_features(df: pd.DataFrame, threshold: float = 0.95) -> List[
     return constant_features
 
 
-def detect_class_imbalance(y: pd.Series, threshold: float = 0.3) -> Dict[str, Any]:
+def detect_class_imbalance(y: pd.Series, threshold: float = None) -> Dict[str, Any]:
     """
     Detect class imbalance in target variable.
     
     Args:
         y: Target variable
-        threshold: Imbalance threshold (minority class percentage)
+        threshold: Imbalance threshold (minority class percentage). If None, automatically calculated based on number of classes.
         
     Returns:
         Dictionary with imbalance information
     """
     class_counts = y.value_counts()
     class_percentages = y.value_counts(normalize=True)
+    
+    n_classes = len(class_counts)
+    
+    # Auto-calculate threshold based on number of classes if not provided
+    if threshold is None:
+        # Expected balanced percentage = 100% / n_classes
+        # Threshold = 50% of expected balanced percentage
+        # For binary: 50% of 50% = 25%
+        # For 3 classes: 50% of 33.3% = 16.7%
+        # For 5 classes: 50% of 20% = 10%
+        expected_balanced = 1.0 / n_classes
+        threshold = expected_balanced * 0.5
     
     min_class = class_percentages.idxmin()
     min_percentage = class_percentages.min()
@@ -208,14 +220,15 @@ def detect_class_imbalance(y: pd.Series, threshold: float = 0.3) -> Dict[str, An
     
     return {
         'is_imbalanced': is_imbalanced,
-        'n_classes': len(class_counts),
+        'n_classes': n_classes,
         'class_distribution': {str(k): int(v) for k, v in class_counts.items()},
         'class_percentages': {str(k): float(v * 100) for k, v in class_percentages.items()},
         'minority_class': str(min_class),
         'minority_percentage': float(min_percentage * 100),
         'majority_class': str(max_class),
         'majority_percentage': float(max_percentage * 100),
-        'imbalance_ratio': float(imbalance_ratio)
+        'imbalance_ratio': float(imbalance_ratio),
+        'threshold_used': float(threshold * 100)
     }
 
 

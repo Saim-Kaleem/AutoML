@@ -47,16 +47,19 @@ class RuleBasedClassifier(BaseEstimator, ClassifierMixin):
         return proba
 
 
-def get_model_configs() -> Dict[str, Dict[str, Any]]:
+def get_model_configs(class_weight: str = None) -> Dict[str, Dict[str, Any]]:
     """
     Get configurations for all models.
+    
+    Args:
+        class_weight: Class weight method ('balanced', 'balanced_subsample', or None)
     
     Returns:
         Dictionary mapping model names to their configurations
     """
     return {
         'Logistic Regression': {
-            'model': LogisticRegression(max_iter=1000, random_state=42),
+            'model': LogisticRegression(max_iter=1000, random_state=42, class_weight=class_weight),
             'params': {
                 'C': [0.01, 0.1, 1.0, 10.0],
                 'solver': ['lbfgs', 'liblinear'],
@@ -91,7 +94,7 @@ def get_model_configs() -> Dict[str, Dict[str, Any]]:
             'description': 'Probabilistic classifier based on Bayes theorem'
         },
         'Random Forest': {
-            'model': RandomForestClassifier(random_state=42),
+            'model': RandomForestClassifier(random_state=42, class_weight=class_weight),
             'params': {
                 'n_estimators': [50, 100, 200],
                 'max_depth': [5, 10, None],
@@ -102,7 +105,7 @@ def get_model_configs() -> Dict[str, Dict[str, Any]]:
             'description': 'Ensemble of decision trees with bagging'
         },
         'Support Vector Machine': {
-            'model': SVC(random_state=42, probability=True),
+            'model': SVC(random_state=42, probability=True, class_weight=class_weight),
             'params': {
                 'C': [0.1, 1.0, 10.0],
                 'kernel': ['rbf', 'linear', 'poly'],
@@ -168,7 +171,7 @@ def train_single_model(model, X_train, y_train, X_test, y_test) -> Dict[str, Any
 
 
 def train_all_models(X_train, y_train, X_test, y_test, 
-                     class_weights: Dict[Any, float] = None) -> Dict[str, Dict[str, Any]]:
+                     class_weight_method: str = None) -> Dict[str, Dict[str, Any]]:
     """
     Train all models and return results.
     
@@ -177,22 +180,19 @@ def train_all_models(X_train, y_train, X_test, y_test,
         y_train: Training target
         X_test: Test features
         y_test: Test target
-        class_weights: Class weights for imbalanced data (optional)
+        class_weight_method: Class weight method ('balanced', 'balanced_subsample', or None)
         
     Returns:
         Dictionary mapping model names to their results
     """
-    model_configs = get_model_configs()
+    model_configs = get_model_configs(class_weight=class_weight_method)
     results = {}
     
     for model_name, config in model_configs.items():
         try:
             model = config['model']
             
-            # Apply class weights if supported and provided
-            if class_weights and hasattr(model, 'class_weight'):
-                model.set_params(class_weight=class_weights)
-            
+            # Class weights are already set in get_model_configs(), no need to set again
             result = train_single_model(model, X_train, y_train, X_test, y_test)
             result['description'] = config['description']
             results[model_name] = result

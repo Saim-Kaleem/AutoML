@@ -387,6 +387,13 @@ def prepare_data_pipeline(df: pd.DataFrame, target_col: str,
     # Initialize preprocessor
     preprocessor = DataPreprocessor()
     
+    # Manual feature selection (drop unwanted columns)
+    if config.get('manual_feature_selection', False) and config.get('features_to_drop'):
+        features_to_drop = config['features_to_drop']
+        X_train = X_train.drop(columns=[col for col in features_to_drop if col in X_train.columns])
+        X_test = X_test.drop(columns=[col for col in features_to_drop if col in X_test.columns])
+        preprocessor.preprocessing_config['manually_dropped_features'] = features_to_drop
+    
     # Handle missing values
     if config.get('handle_missing', False):
         X_train, X_test = preprocessor.handle_missing_values(

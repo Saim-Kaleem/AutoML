@@ -321,7 +321,7 @@ def step_upload_dataset():
     
     st.markdown('<div class="info-box">📁 Upload a CSV file (max 100 MB). The dataset must have at least 2 columns and 10 rows.</div>', unsafe_allow_html=True)
     
-    uploaded_file = st.file_uploader("Choose a CSV file", type=['csv'], key='file_uploader')
+    uploaded_file = st.file_uploader("Choose a CSV file", type=['csv'], key='file_uploader', label_visibility="hidden")
     
     if uploaded_file is not None:
         try:
@@ -396,7 +396,7 @@ def step_upload_dataset():
                     col1, col2, col3 = st.columns([2, 2, 1])
                     
                     with col1:
-                        st.text(f"**{col}**")
+                        st.text(f"{col}")
                     with col2:
                         st.text(f"Current: {df[col].dtype}")
                     with col3:
@@ -718,6 +718,62 @@ def step_configure_preprocessing():
     
     config['random_state'] = 42
     
+    # Feature Selection
+    st.subheader("📋 Feature Selection")
+    st.markdown("Choose which features to include in the model training.")
+    
+    # Get all feature columns (excluding target)
+    all_features = [col for col in df.columns if col != target_col]
+    
+    with st.expander("Manual Feature Selection", expanded=False):
+        st.info("💡 **Tip**: Exclude irrelevant columns like IDs, timestamps, or domain-specific features that shouldn't influence predictions.")
+        
+        # Option to select features to keep or drop
+        selection_mode = st.radio(
+            "Selection Mode",
+            ["Keep All Features", "Select Features to Keep", "Select Features to Drop"],
+            help="Choose how you want to control feature selection"
+        )
+        
+        if selection_mode == "Select Features to Keep":
+            selected_features = st.multiselect(
+                "Select Features to Keep",
+                all_features,
+                default=all_features,
+                help="Only these features will be used for training"
+            )
+            config['manual_feature_selection'] = True
+            config['features_to_keep'] = selected_features
+            config['features_to_drop'] = [col for col in all_features if col not in selected_features]
+            
+            if len(selected_features) == 0:
+                st.error("⚠️ You must select at least one feature!")
+            else:
+                st.success(f"✅ Selected {len(selected_features)} out of {len(all_features)} features")
+        
+        elif selection_mode == "Select Features to Drop":
+            features_to_drop = st.multiselect(
+                "Select Features to Drop",
+                all_features,
+                help="These features will be excluded from training"
+            )
+            config['manual_feature_selection'] = True
+            config['features_to_drop'] = features_to_drop
+            config['features_to_keep'] = [col for col in all_features if col not in features_to_drop]
+            
+            remaining_features = len(all_features) - len(features_to_drop)
+            if remaining_features == 0:
+                st.error("⚠️ You cannot drop all features!")
+            elif len(features_to_drop) > 0:
+                st.success(f"✅ Will drop {len(features_to_drop)} features, keeping {remaining_features}")
+            else:
+                st.info("No features selected for dropping")
+        
+        else:  # Keep All Features
+            config['manual_feature_selection'] = False
+            config['features_to_drop'] = []
+            config['features_to_keep'] = all_features
+    
     # Missing values
     if diagnostics['missing_values']['has_missing']:
         st.subheader("🔧 Missing Value Imputation")
@@ -808,15 +864,35 @@ def step_configure_preprocessing():
     # Class imbalance
     if diagnostics.get('class_imbalance', {}).get('is_imbalanced', False):
         st.subheader("⚖️ Class Imbalance Handling")
-        handle_imbalance = st.checkbox("Handle Class Imbalance", value=False)
-        config['handle_imbalance'] = handle_imbalance
         
-        if handle_imbalance:
+        imbalance_strategy = st.radio(
+            "Choose Strategy",
+            ["No Handling", "Class Weights", "Resampling"],
+            help="Class weights adjust model training, resampling modifies the dataset"
+        )
+        
+        if imbalance_strategy == "Class Weights":
+            config['handle_imbalance'] = False  # No data resampling
+            config['use_class_weights'] = True
+            
+            weight_method = st.selectbox(
+                "Class Weight Method",
+                ['balanced', 'balanced_subsample'],
+                help="'balanced' uses n_samples / (n_classes * np.bincount(y))"
+            )
+            config['class_weight_method'] = weight_method
+            
+            st.info("✅ Models will automatically use class weights during training (LogisticRegression, RandomForest, SVM)")
+            st.warning("⚠️ Note: Some models (KNN, NaiveBayes) don't support class weights and will use default behavior")
+            
+        elif imbalance_strategy == "Resampling":
+            config['handle_imbalance'] = True
+            config['use_class_weights'] = False
+            
             imbalance_method = st.selectbox(
                 "Resampling Method",
-                ['none', 'undersample', 'oversample', 'smote', 'adasyn'],
+                ['undersample', 'oversample', 'smote', 'adasyn'],
                 format_func=lambda x: {
-                    'none': 'None',
                     'undersample': 'Random Undersampling',
                     'oversample': 'Random Oversampling',
                     'smote': 'SMOTE (Synthetic Minority Over-sampling)',
@@ -824,6 +900,10 @@ def step_configure_preprocessing():
                 }[x]
             )
             config['imbalance_method'] = imbalance_method
+            
+        else:  # No Handling
+            config['handle_imbalance'] = False
+            config['use_class_weights'] = False
     
     st.session_state.preprocessing_config = config
     
@@ -879,12 +959,16 @@ def step_train_models():
     
     # Train models
     if st.session_state.model_results is None:
+        config = st.session_state.preprocessing_config
+        class_weight_method = config.get('class_weight_method') if config.get('use_class_weights') else None
+        
         with st.spinner("🤖 Training all models... This may take a while."):
             model_results = models.train_all_models(
                 processed_data['X_train'],
                 processed_data['y_train'],
                 processed_data['X_test'],
-                processed_data['y_test']
+                processed_data['y_test'],
+                class_weight_method=class_weight_method
             )
             st.session_state.model_results = model_results
         
