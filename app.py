@@ -49,9 +49,14 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* Main container styling */
+    /* Main container styling - Use light background for Streamlit Cloud compatibility */
     .main {
-        background: #ffffff;
+        background: #f8f9fa;
+    }
+    
+    /* Override Streamlit default text colors for light theme */
+    .stApp {
+        background: #f8f9fa;
     }
     
     /* Title styling */
@@ -165,18 +170,33 @@ st.markdown("""
     
     /* Sidebar styling */
     [data-testid="stSidebar"] {
-        background: #1f2937;
+        background: #1f2937 !important;
+    }
+    
+    [data-testid="stSidebar"] * {
+        color: white !important;
     }
     
     [data-testid="stSidebar"] .element-container {
-        color: white;
+        color: white !important;
     }
     
     [data-testid="stSidebar"] h1,
     [data-testid="stSidebar"] h2,
     [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] h4,
+    [data-testid="stSidebar"] h5,
+    [data-testid="stSidebar"] h6,
     [data-testid="stSidebar"] p,
-    [data-testid="stSidebar"] span {
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] div {
+        color: white !important;
+    }
+    
+    /* Sidebar text elements */
+    [data-testid="stSidebar"] .stMarkdown,
+    [data-testid="stSidebar"] .stText {
         color: white !important;
     }
     
@@ -218,17 +238,32 @@ st.markdown("""
         margin-bottom: 1rem;
     }
     
-    /* Text colors */
-    h1, h2, h3, h4, h5, h6 {
-        color: white;
+    /* Text colors - Use dark colors for light background */
+    h1 {
+        color: #1f2937 !important;
     }
     
     h2, h3 {
-        color: #f59e0b;
+        color: #f59e0b !important;
     }
     
-    p, span, div {
-        color: white;
+    h4, h5, h6 {
+        color: #1f2937 !important;
+    }
+    
+    /* Default text should be dark on light background */
+    p {
+        color: #374151 !important;
+    }
+    
+    /* Labels and general text */
+    label {
+        color: #1f2937 !important;
+    }
+    
+    /* Streamlit native elements */
+    .stMarkdown {
+        color: #374151;
     }
 </style>
 """, unsafe_allow_html=True)
